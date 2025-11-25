@@ -1,224 +1,321 @@
 ---
-title: "Assessment"
+title: "COVID-19 and Community Analgesic Prescribing in Scotland"
 output: html_document
-date: "2025-11-14"
+date: "2025/11/27"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,message = FALSE)
+# Global chunk options
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, fig.align = "center")
 ```
 
-## Topic
-
-I will compare Scotland’s prescribing of analgesics (BNF 04.07) during COVID (2020–2021) versus non-COVID years (2019, 2022). As a first step, I have produced a 2020 table listing the top 10 prescribed analgesics and their annual totals. I've also produced a bar chart about total analgesics produced in 2022. Beyond comparing total annual prescribing, I will examine whether the leading analgesics remain consistent across these years.
-
-## Future Plan
-
-I will present a bar chart with one bar per year showing the total number of analgesic prescription items, highlight the COVID years, and briefly interpret differences. I will also repeat the ranking for each year to assess stability or shifts in the top analgesics.
-
 ```{r, include=FALSE}
+## Purpose: Load core packagess for data wrangling, tables, paths, and plotting
+#Load libraries
 library(tidyverse)
 library(janitor) # cleaning data
-library(gt) # tables
+library(gt) # nicely formatted tables
 library(here) # directory structure 
-
-January2020 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/e5c841f2-3e16-428b-97db-0798ec7a5fb4/download/pitc202001.csv")%>% 
-  clean_names()
-January2020
-
-February2020 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/af121e7c-4124-4955-92e9-a9580ccd469e/download/pitc202002.csv")%>% 
-  clean_names()
-February2020
-
-March2020 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/9581bd8d-5568-4462-93a6-6d7bfbbe7cbc/download/pitc202003.csv")%>% 
-  clean_names()
-March2020
-
-April2020 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/9cdc0526-21ab-43de-b832-bc032cd31b24/download/pitc202004.csv")%>% 
-  clean_names()
-April2020 
-
-May2020 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/f2ffa7b3-3f93-470a-8125-880afb9aafe0/download/pitc202005.csv")%>% 
-  clean_names()
-May2020
-
-June2020 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/64131d22-ab47-43ff-9674-ebe8ed7edbd7/download/pitc202006.csv")%>% 
-  clean_names()
-June2020
-
-July2020 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/80b6ddb1-f09b-4d76-9927-da1e118b01ff/download/pitc202007.csv")%>% 
-  clean_names()
-July2020
-
-August2020 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/5fd5f56e-d1d2-4f22-b4f7-224fbd50dca3/download/pitc202008.csv")%>% 
-  clean_names()
-August2020
-
-September2020 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/e1b0cfdd-d184-4ebc-bd93-f1a10d84ead0/download/pitc202009.csv")%>% 
-  clean_names()
-September2020
-
-October2020 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/83bf4892-d246-41f8-a6ca-d44d18e2a2ca/download/pitc202010.csv")%>% 
-  clean_names()
-October2020
-
-November2020 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/ab8aa642-2562-4abb-a360-5c5f9e7e349c/download/pitc202011.csv")%>% 
-  clean_names()
-November2020
-
-December2020 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/0c033702-4d88-4f2d-989c-a709b1f4529e/download/pitc202012.csv")%>% 
-  clean_names()
-December2020
-
+library(scales) # number/percent formatting
+library(glue) # string interpolation for labels
 ```
 
-```{r, include=FALSE}
-# select BNFitemcode and number of paid items columns for each month and filter out analgesics
-Jan2020_analgesics <- January2020 %>%
-  select(bnf_item_code, number_of_paid_items) %>%
-  filter(startsWith(bnf_item_code, "0407")) %>%
-  group_by(bnf_item_code) %>% 
-  summarise(paid_item_Jan20 = sum(number_of_paid_items, na.rm = TRUE), .groups = "drop")
+## Introduction
+The COVID-19 pandemic created a natural experiment for testing whether a major healthcare-system shock altered community analgesic prescribing in Scotland. From March 2020 onward, general practice rapidly shifted to remote consultations, elective procedures were postponed, and patterns of injury and infection changed under repeated lockdowns. At the same time, COVID-19 itself may have influenced population pain burden through post-viral symptoms, delayed rehabilitation, and changes in mental health. This project uses Public Health Scotland "Prescriptions in the Community" data to examine whether these disruptions were associated with measurable changes in analgesic prescribing. I focus on British National Formulary (BNF) section 04.07 (analgesics) and compare prescribing "before", "during", and "after" the main COVID-19 restriction period.To capture pre-, mid- and post-pandemic practice with similar follow-up, the three non-overlapping 26-month windows were defined as:
+Before COVID:January 2018 – February 2020  
+During COVID: March 2020 – April 2022  
+After COVID: May 2022 – June 2024
 
-Feb2020_analgesics <- February2020 %>%
-  select(bnf_item_code, number_of_paid_items) %>%
-  filter(startsWith(bnf_item_code, "0407")) %>%
-  group_by(bnf_item_code) %>% 
-  summarise(paid_item_Feb20 = sum(number_of_paid_items, na.rm = TRUE), .groups = "drop")
+The primary outcome is the "number of paid items", a standard indicator of community prescribing volume. 
+The central questions are: 
+1. Did the overall volume of community analgesic prescribing change across three periods?
+2. Which specific analgesic products dominated prescribing before, during and after COVID-19, and did their relative shares shift?
+3. Were any changes short-lived spikes around the pandemic onset, or did they evolve into sustained trends?
+To answer these, a period-level summary of the top 10 analgesic product were constructed by volume. Their changes in drug share were then examined using a heatmap, and a month-by-month trajectories for the same union of top-ten drugs were explored. 
 
-Mar2020_analgesics <- March2020 %>%
-  select(bnf_item_code, number_of_paid_items) %>%
-  filter(startsWith(bnf_item_code, "0407")) %>%
-  group_by(bnf_item_code) %>% 
-  summarise(paid_item_Mar20 = sum(number_of_paid_items, na.rm = TRUE), .groups = "drop")
+The analysis proceeds in three steps:
 
-Apr2020_analgesics <- April2020 %>%
-  select(bnf_item_code, number_of_paid_items) %>%
-  filter(startsWith(bnf_item_code, "0407")) %>%
-  group_by(bnf_item_code) %>% 
-  summarise(paid_item_Apr20 = sum(number_of_paid_items, na.rm = TRUE), .groups = "drop")
+1.Top-10 table by period (Table 1).
+Within each period, I ranked analgesic items by paid items and selected the top ten. For each of these, I calculated its share of all analgesic items in that period (`share_pct = paid_items / total_paid_items`) and formatted the results using `gt` into a multi-panel table grouped by period.
 
-May2020_analgesics <- May2020 %>%
-  select(bnf_item_code, number_of_paid_items) %>%
-  filter(startsWith(bnf_item_code, "0407")) %>%
-  group_by(bnf_item_code) %>% 
-  summarise(paid_item_May20 = sum(number_of_paid_items, na.rm = TRUE), .groups = "drop")
+2.Changes in share for the union of top-ten drugs (Figure 1, heatmap). 
+I took the union of BNF codes that appeared in the top ten in any period and recomputed their shares within each period. These were reshaped into a wide table (`union_shares`) and then into contrasts (During vs Before, After vs During, After vs Before). The resulting percentage-point changes were displayed as a heatmap, with warm colours indicating increased share and cool colours indicating decreased share.
 
-Jun2020_analgesics <- June2020 %>%
-  select(bnf_item_code, number_of_paid_items) %>%
-  filter(startsWith(bnf_item_code, "0407")) %>%
-  group_by(bnf_item_code) %>% 
-  summarise(paid_item_Jun20 = sum(number_of_paid_items, na.rm = TRUE), .groups = "drop")
-  
-Jul2020_analgesics <- July2020 %>%
-  select(bnf_item_code, number_of_paid_items) %>%
-  filter(startsWith(bnf_item_code, "0407")) %>%
-  group_by(bnf_item_code) %>% 
-  summarise(paid_item_Jul20 = sum(number_of_paid_items, na.rm = TRUE), .groups = "drop")
+3.Monthly time-series for total and individual drugs (Figures 2–3). 
+Using the full monthly dataset (`AllMonthly`), I calculated total analgesic paid items per month and plotted them across the entire study period with a LOESS smoother and a shaded band marking the COVID restriction window. I then repeated this for the union of top-ten drugs, faceting by drug to show how individual trajectories evolved across time and through the pandemic.
 
-Aug2020_analgesics <- August2020 %>%
-  select(bnf_item_code, number_of_paid_items) %>%
-  filter(startsWith(bnf_item_code, "0407")) %>%
-  group_by(bnf_item_code) %>% 
-  summarise(paid_item_Aug20 = sum(number_of_paid_items, na.rm = TRUE), .groups = "drop")
+Together, these steps allow me to move from a high-level view of which drugs dominate prescribing, to how their relative importance shifted, and finally to whether those changes represent brief shocks or longer-term shifts in practice.
 
-Sept2020_analgesics <- September2020 %>%
-  select(bnf_item_code, number_of_paid_items) %>%
-  filter(startsWith(bnf_item_code, "0407")) %>%
-  group_by(bnf_item_code) %>% 
-  summarise(paid_item_Sept20 = sum(number_of_paid_items, na.rm = TRUE), .groups = "drop")
 
-Oct2020_analgesics <- October2020 %>%
-  select(bnf_item_code, number_of_paid_items) %>%
-  filter(startsWith(bnf_item_code, "0407")) %>%
-  group_by(bnf_item_code) %>% 
-  summarise(paid_item_Oct20 = sum(number_of_paid_items, na.rm = TRUE), .groups = "drop")
 
-Nov2020_analgesics <- November2020 %>%
-  select(bnf_item_code, number_of_paid_items) %>%
-  filter(startsWith(bnf_item_code, "0407")) %>%
-  group_by(bnf_item_code) %>% 
-  summarise(paid_item_Nov20 = sum(number_of_paid_items, na.rm = TRUE), .groups = "drop")
+## Data and Methods
+```{r}
+## Purpose: Import data from before, during, and after COVID-19, keeping only BNF code, BNF item drscription, and number of paid items
+read_cols <- function(path){read_csv(path) %>%
+    clean_names() %>%
+    select(any_of(c("bnf_item_code", "bnf_item_description", "number_of_paid_items")))}
 
-Dec2020_analgesics <- December2020 %>%
-  select(bnf_item_code, number_of_paid_items) %>%
-  filter(startsWith(bnf_item_code, "0407")) %>%
-  group_by(bnf_item_code) %>% 
-  summarise(paid_item_Dec20 = sum(number_of_paid_items, na.rm = TRUE), .groups = "drop")
+# Before COVID data
+FileBefore <- list.files(here("data","before"), pattern="csv", full.names=TRUE)
+DataBefore <- map_dfr(FileBefore, read_cols)
 
-```
+# During COVID data
+FileDuring <- list.files(here("data","during"), pattern="csv", full.names=TRUE)
+DataDuring <- map_dfr(FileDuring, read_cols)
 
-```{r, include=FALSE}
-# join the datasets for 2020
-data2020 <- Jan2020_analgesics %>%
-  full_join(Feb2020_analgesics, by = "bnf_item_code") %>% 
-  full_join(Mar2020_analgesics, by = "bnf_item_code") %>% 
-  full_join(Apr2020_analgesics, by = "bnf_item_code") %>% 
-  full_join(May2020_analgesics, by = "bnf_item_code") %>% 
-  full_join(Jun2020_analgesics, by = "bnf_item_code") %>% 
-  full_join(Jul2020_analgesics, by = "bnf_item_code") %>% 
-  full_join(Aug2020_analgesics, by = "bnf_item_code") %>% 
-  full_join(Sept2020_analgesics, by = "bnf_item_code") %>% 
-  full_join(Oct2020_analgesics, by = "bnf_item_code") %>% 
-  full_join(Nov2020_analgesics, by = "bnf_item_code") %>% 
-  full_join(Dec2020_analgesics, by = "bnf_item_code")
+# After COVID data
+FileAfter <- list.files(here("data","after"), pattern="csv", full.names=TRUE)
+DataAfter <- map_dfr(FileAfter, read_cols)
 
-```
-
-```{r, include=FALSE}
-# make a single totals column 
-data2020 <- data2020 %>% 
-  mutate (paid_items_sum2020 = paid_item_Jan20 + paid_item_Feb20 + paid_item_Mar20 + paid_item_Apr20 + paid_item_May20 + paid_item_Jun20 + paid_item_Jul20 + paid_item_Aug20 +
-            paid_item_Sept20 + paid_item_Oct20 + paid_item_Nov20 + paid_item_Dec20) %>%
-  select (bnf_item_code, paid_items_sum2020) %>% 
-  filter (!is.na(paid_items_sum2020))
+# readr reports parsing warnings because some unused columns contain mixed or irregular values. Selected columns were checked and are clean,the warnings do not affect analysis
+problems(DataBefore) %>%
+  filter(col %in% c("bnf_item_code","bnf_item_description","number_of_paid_items"))
+problems(DataDuring) %>%
+  filter(col %in% c("bnf_item_code","bnf_item_description","number_of_paid_items"))
+problems(DataAfter) %>%
+  filter(col %in% c("bnf_item_code","bnf_item_description","number_of_paid_items"))
 ```
 
 
-```{r, echo=FALSE}
-# total Analgesics in 2020
-Analgesics2020_total <- data2020 %>% 
-  summarise(total = sum(paid_items_sum2020))
+```{r}
+## Purpose: Collapse monthly rows into period-level totals for each analgesic code (BNF04.07), and compute total analgesic volume per period
+# Create a function to select BNF_item_code that begins with "0407" for before, during, and after COVID, representing all the analgesics and add in item description for corresponding BNF_item_code
+AnalgesicsPeriod <- function(df, period_label) {df %>% 
+    filter(startsWith(bnf_item_code, "0407")) %>%
+    mutate(bnf_item_description = str_squish(bnf_item_description)) %>% 
+    group_by(bnf_item_code) %>%
+    summarise(paid_items = sum(number_of_paid_items, na.rm = TRUE),
+              bnf_item_description = first(bnf_item_description), .groups = "drop") %>% 
+    mutate(period = period_label)} 
 
-plot_2020 <- Analgesics2020_total %>%
-  mutate(year = "2020") %>%                       
-  ggplot(aes(x = year, y = total)) +
-  geom_col(width = 0.6) +
-  geom_text(aes(label = scales::comma(total)),
-            vjust = -0.3, size = 4) +
-  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.05))) +
-  labs(
-    title = "Total Analgesics Prescriptions (BNF 04.07) — 2019-2022",
-    x = "Year", y = "Quantity"
-  )
-
-plot_2020
+# Apply to each period and stack into a table
+AnalgesicsAllPeriods <- bind_rows(
+  AnalgesicsPeriod(DataBefore, "Before COVID"), 
+  AnalgesicsPeriod(DataDuring, "During COVID"), 
+  AnalgesicsPeriod(DataAfter, "After COVID")) %>% 
+  mutate(period = factor(period, levels=c("Before COVID", "During COVID", "After COVID")))
 ```
 
+## Results
+```{r}
+## Purpose: Identify the top-10 mostly prescribed analgesics in each period, compute their shares of all analgesic items, and display them in a formatted table
+# Calculate total paid item quantity of analgesics during each period
+Period_totals_data <- AnalgesicsAllPeriods %>%
+  group_by(period) %>% 
+  summarise(total_paid_items = sum(paid_items, na.rm = TRUE), .groups = "drop") 
 
-
-```{r, echo=FALSE}
-# make a table
-Analgesics2020_table <- data2020 %>%
-  mutate(paid_items_sum2020 = as.numeric(paid_items_sum2020)) %>%
-  arrange(desc(paid_items_sum2020)) %>%
+# Top10 table
+Top10_each_period_data <- AnalgesicsAllPeriods %>%
+  group_by(period) %>% 
+  arrange(desc(paid_items), .by_group = TRUE) %>%
+  slice_head(n = 10) %>%
   mutate(rank = row_number()) %>%
-  select(rank, bnf_item_code, paid_items_sum2020) %>%
-  slice_head(n = 10)
+  ungroup() %>% 
+  left_join(Period_totals_data, by = "period") %>% 
+  mutate(share_pct = paid_items/total_paid_items,
+          period = factor(period, levels = c("Before COVID","During COVID","After COVID")),
+         period_label = glue("{period} (Total analgesics: {comma(total_paid_items)})"))
+  
+# Make this table pretty 
+Top10_each_period_table <- Top10_each_period_data %>% 
+  select(period, period_label, rank, bnf_item_code, bnf_item_description, paid_items, share_pct) %>% 
+  arrange(period, rank) %>% 
+  gt(groupname_col = "period_label") %>%
+  tab_header(title = md("Top 10 Most Prescribed Analgesics Before, During, and After COVID-19")) %>%
+  cols_hide(columns = period) %>% 
+  cols_label(rank = "Rank", bnf_item_code = "BNF Item Code", 
+             bnf_item_description = "BNF Item Description", 
+             paid_items = "Number of Paid Items", 
+             share_pct = "Share of Analgesics(%)") %>%
+  fmt_number(columns = paid_items, decimals = 0, use_seps = TRUE) %>%
+  fmt_percent(columns = share_pct, decimals = 2) %>% 
+  cols_width(rank ~ px(60), bnf_item_code ~ px(140), bnf_item_description ~ px(340), paid_items ~ px(140), share_pct ~ px(140)) %>%
+  cols_align(align = "center", columns = c(rank, bnf_item_code, paid_items, share_pct)) %>%
+  cols_align(align = "left", columns = bnf_item_description) %>%
+  opt_row_striping() %>%
+  tab_style(style = list(cell_fill(color = "#F5F5F5"), cell_text(weight = "bold")), locations = cells_body(columns = rank)) %>%
+  tab_options(row_group.border.top.style = "solid", row_group.border.top.width = px(2), row_group.border.top.color = "black", row_group.padding = px(6)) %>%
+  tab_options(table.font.size = px(13), heading.title.font.size = px(16), heading.subtitle.font.size = px(11), row_group.font.weight = "bold", row_group.font.size = px(12), column_labels.font.weight = "bold", column_labels.border.bottom.width = px(2), table.border.top.width = px(2), table.border.bottom.width = px(2), data_row.padding = px(4))
+Top10_each_period_table
+```
 
-Analgesics2020_table %>%
-  gt() %>%
-  tab_header(
-    title = "Analgesics (BNF 04.07) — 2020") %>%
-  cols_label(
-    rank = "Rank",
-    bnf_item_code = "BNF code",
-    paid_items_sum2020 = "Quantity"
-  ) %>%
-  fmt_number(columns = paid_items_sum2020, decimals = 0, use_seps = TRUE) %>%
-  opt_stylize() %>%
-  tab_options(table.font.size = px(14))
+## Intepretation
+Across all three 26-month periods, analgesic prescription in Scotland is dominated by a similar set of drugs. The same core products—paracetamol 500mg tablets, co-codamol 30/500mg tablets, tramadol 50mg capsules, and dihydrocodeine 30mg tablets appear in the top ranks before, during, and after COVID-19. Together, paracetamol 50mg and co-codamol 30/50mg account for roughly 40-43% of all analgesic items in each period, indicating that first-line simple and combination analgesics remained the backbone of pain management despite major disruption to primary-care services. 
+The total volume of analgesics prescription is stable: 18.83 million items before COVID, 18.54 million during, and 19.08 million after. This suggests that COVID-19 didn’t produce a large net increase or decrease in community analgesic use, but rather subtle shifts in which agents were used. Within the top 10, paracetamol 500mg increases its share from ~20.4% pre-pandemic to ~21.7% during and after, while co-codamol 30/500mg shows a similar small rise from ~20% to ~21-22%. In contrast, tramadol 50mg falls from ~9.1% of all analgesics pre-COVID to ~8.6% during and ~8% after, and co-codamol 8/500mg also declines steadily. These patterns are consistent with a gradual shift away from stronger or higher-dose opioid combinations toward first-line paracetamol-based regimens, aligning with ongoing opioid-stewardship efforts in UK primary care, rather than a COVID-specific surge in strong analgesic use/////. 
+Several more niche products show smaller but interpretable changes. Paediatric paracetamol suspensions (120 mg/5 mL and 250 mg/5 mL) remain in the top 10 across all periods but contribute a modest and shifting share: together they account for roughly 4–5% of analgesic items before COVID, dip during the pandemic (particularly the 120 mg/5 mL suspension), and partially recover or even overshoot after restrictions ease. This is consistent with reduced childhood infections and fewer GP consultations during lockdown, followed by a rebound in routine paediatric prescribing once contact rates recovered. Sumatriptan 50 mg (acute migraine treatment) maintains a low but gradually rising share across periods, while morphine oral solution 10 mg/5 mL only enters the top 10 in the post-COVID window, albeit with a small share (~1.6%), suggesting some intensification of community-managed severe pain in a minority of patients.
+Overall, the table indicates a modest shift towards first-line simple analgesics and away from some higher-risk opioids, rather than a large change in total analgesic load.
+
+
+```{r}
+## Track how the share of each union top-10 drug changes between periods and visualise the percentage-point differences as a heatmap
+# Union of Top-10 analgesic codes across all periods
+top10_union <- Top10_each_period_data %>%
+  distinct(bnf_item_code, bnf_item_description)
+# Pull paid_items for union codes from full period data, then compute share
+union_shares <- AnalgesicsAllPeriods %>%
+  semi_join(top10_union, by = "bnf_item_code") %>%
+  left_join(Period_totals_data, by = "period") %>%
+  mutate(share = paid_items / total_paid_items) %>%
+  select(period, bnf_item_code, bnf_item_description, share) %>%
+  pivot_wider(names_from  = period,
+              values_from = share,
+              values_fill = 0)
+
+# Contrast the percentage share of the union top-10 drugs before vs during vs after COVID and 
+union_change <- union_shares %>%
+  mutate(`During vs Before` = `During COVID` - `Before COVID`,
+         `After vs During`  = `After COVID`  - `During COVID`,
+         `After vs Before`  = `After COVID`  - `Before COVID`) %>%
+  pivot_longer(cols = c(`During vs Before`,`After vs During`,`After vs Before`), names_to = "contrast", values_to = "delta") 
+
+# Order rows by maximum absolute share change across contrasts to highlight drugs with the largest compositional shifts
+order_levels <- union_change %>%
+  group_by(bnf_item_description) %>%
+  summarise(max_abs = max(abs(delta)), .groups="drop") %>%
+  arrange(desc(max_abs)) %>%
+  pull(bnf_item_description)
+
+# Heatmap
+union_change_plot <- union_change %>% 
+  mutate(contrast = factor(contrast, levels = c("During vs Before", "After vs During", "After vs Before")),
+         bnf_item_description = factor(bnf_item_description, levels = rev(order_levels)), drug_label = str_wrap(bnf_item_description, width = 28))
+# Symmetric colour limits around 0
+lim <- max(abs(union_change_plot$delta), na.rm = TRUE)
+ggplot(union_change_plot,
+       aes(x = contrast, y = drug_label, fill = delta)) +
+  geom_tile(color = "white", linewidth = 0.6) +
+  geom_text(aes(label = percent(delta, accuracy = 0.1)), size = 3.2, fontface = "bold") +
+  scale_fill_gradient2(low = "#2166ac", mid = "white", high = "#b2182b", limits = c(-lim, lim), breaks = pretty_breaks(5), labels = percent_format(accuracy = 0.1), name = "Δ share")+
+  scale_x_discrete(position = "top") +
+  labs(title = "Change in Share of Analgesics Prescription",
+       subtitle = "Union of Top-10 drugs across periods (values are percentage_point changes)", x = NULL, y = NULL, caption = "Warm colours = increased share; Cool colours = decreased share.") + theme_minimal(base_size = 12) + theme(panel.grid = element_blank(), axis.text.x = element_text(face = "bold", size = 10), axis.text.y = element_text(size = 9), plot.title = element_text(face = "bold", size = 15, hjust = 0.5), plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b=8)), legend.title = element_text(face = "bold"), legend.key.height = unit(1.1, "cm"), plot.margin = margin(10, 12, 10, 10))
+```
+
+## Intepretation
+Because Table 1 summarises each 26-month window into a single average, it cannot show how these differences emerged over time or whether they were transient spikes versus sustained shifts. To explore this, I restricted attention to the union of the Top-10 drugs across periods and calculated how each drug’s share changed between time windows (Figure X, heatmap). The heatmap visualises these percentage-point changes in share, with warm colours indicating increases and cool colours indicating decreases. This highlights that paracetamol 500 mg and co-codamol 30/500 mg gained ~1–1.3 percentage points after COVID relative to before, whereas tramadol 50 mg and paediatric paracetamol 120 mg/5 mL lost share, consistent with a gradual tilt toward simpler, non-opioid regimens.
+
+
+
+
+```{r}
+## Purpose: Show overall monthly volume of all analgesics across the study period
+# Load Monthly Analgesics Data
+read_cols_month <- function(path, period_label){
+  yyyymm <- str_extract(basename(path), "\\d{6}") 
+  
+  read_csv(path, show_col_types = FALSE) %>%
+    clean_names() %>%
+    select("bnf_item_code", "bnf_item_description", "number_of_paid_items") %>%
+    mutate(covid_period = period_label,
+      month  = yyyymm,
+      bnf_item_description = str_squish(bnf_item_description)) %>% 
+    filter(startsWith(bnf_item_code, "0407"))}
+
+load_monthly <- function(folder, period_label){
+  files <- list.files(here("data", folder), pattern = "csv", full.names = TRUE)
+  map_dfr(files, read_cols_month, period_label = period_label)}
+
+AllMonthly <- bind_rows(
+  load_monthly("before", "Before COVID"),
+  load_monthly("during", "During COVID"),
+  load_monthly("after",  "After COVID")) %>%
+  mutate(covid_period = factor(covid_period, levels = c("Before COVID","During COVID","After COVID")), month = as.character(month)) %>%
+  filter(!is.na(bnf_item_code), 
+         !is.na(bnf_item_description),
+         !is.na(number_of_paid_items), 
+         !is.na(month))
+# To confirm parsing issue unrelated
+problems(AllMonthly) %>%
+  filter(col %in% c("bnf_item_code","bnf_item_description","number_of_paid_items", "month"))
+
+# Monthly totals for analgesics Figure
+Analgesics_monthly_totals <- AllMonthly %>%
+  group_by(month) %>%
+  summarise(total_paid_items = sum(number_of_paid_items, na.rm = TRUE), .groups = "drop") %>% mutate(month_date = ym(month))
+
+covid_start <- ym("2020-03")
+covid_end <- ym("2022-05")
+covid_band <- tibble(xmin = covid_start,
+                     xmax = covid_end,
+                     ymin = -Inf,
+                     ymax = Inf)
+
+ggplot(Analgesics_monthly_totals,
+       aes(x = month_date, y = total_paid_items)) +
+  geom_rect(data = covid_band,
+            aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+            inherit.aes = FALSE, fill = "grey85", alpha = 0.5) +
+  geom_line(linewidth = 0.8, colour = "#2C6BAA") +
+  geom_smooth(method = "loess", se = FALSE, colour = "black") +
+  scale_x_date(date_breaks="3 months", date_labels="%Y-%m") +
+  scale_y_continuous(labels=comma) +
+  labs(title = "Monthly Analgesic Prescription in Scotland (BNF 0407*)",
+       subtitle = "Grey band = COVID restriction period",
+    x = "Year-Month",
+    y = "Total Paid Items") +
+  theme_minimal(base_size = 14) +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title.position = "plot",
+        plot.title = element_text(face = "bold", size = 15, hjust = 0.5),
+        plot.subtitle = element_text(size = 10, margin = margin(b = 6), hjust = 0.5))
 ```
 
 
+```{r}
+## Purpose: Examine drug-specific trajectories for the union of top-10 analgesics
+# Union of Top10 analgesic codes across all periods, and a label for plotting
+code_labels <- union_shares %>% 
+  distinct(bnf_item_code, bnf_item_description) %>% 
+  mutate(bnf_item_description = str_squish(bnf_item_description),
+         label = bnf_item_description)
+
+top10_union_codes <- code_labels %>% 
+  pull(bnf_item_code)
+
+# Monthly totals for Union drugs only
+top10_monthly_code <- AllMonthly %>%
+ filter(bnf_item_code %in% top10_union_codes) %>%
+  mutate(bnf_item_description = str_squish(bnf_item_description), month_date = ym(month)) %>%
+  group_by(month_date, bnf_item_code) %>%
+  summarise(paid_items = sum(number_of_paid_items, na.rm = TRUE), .groups = "drop") %>%
+  left_join(code_labels, by = "bnf_item_code")
+
+
+# plot
+ggplot(top10_monthly_code, aes(x = month_date, y = paid_items)) +
+  geom_rect(data = covid_band,
+            aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax), inherit.aes = FALSE, fill = "grey85", alpha = 0.5) +
+  geom_line(linewidth = 0.7, colour = "#2C6BAA") +
+  geom_smooth(method = "loess", se = FALSE, linewidth = 0.6, colour = "black")+
+  facet_wrap(~ label, scales = "free_y", ncol = 3, labeller = label_wrap_gen(width = 22)) +
+  scale_x_date(date_breaks = "6 months", date_labels = "%Y-%m") +
+  scale_y_continuous(labels = comma) +
+  labs(title = "Monthly Prescription for Union of Top-10 Analgesics", subtitle = "Grey band = COVID restriction period; black curve = within-drug LOESS trend", x = "Year-Month", y = "Number of paid items")+
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    strip.text = element_text(face = "bold", size = 10, margin = margin(b=2)),
+    strip.background = element_rect(fill = NA, colour = NA),
+    panel.spacing = unit(0.9, "lines"),
+    axis.text.x = element_text(size = 8, angle = 45, hjust = 1),
+    plot.title.position = "plot",
+    plot.title = element_text(face = "bold", size = 15, hjust = 0.5),
+    plot.subtitle = element_text(size = 10, margin = margin(b = 6), hjust = 0.5))
+```
+
+## Intepretation
+
+To distinguish short-lived pandemic artefacts from sustained trends, I plotted monthly prescribing trajectories for the same union of Top-10 drugs (Figure Y, faceted time-series) alongside the overall monthly total of all analgesics (Figure Z). The overall series shows a brief spike in early 2020 at the start of COVID-19, likely due to people panic and stock up behaviours //////; and a dip during mid-pandemic, but a clear recovery and mild upward trend post-2022/////. Within this, the faceted plots reveal drug-specific patterns: paracetamol 500 mg tablets and co-codamol 30/500 mg tablet show a sharp surge at the onset of COVID, followed by a higher post-pandemic baseline; tramadol 50 mg declines steadily across the whole period; and paediatric suspensions (i.e. paracetamol oral suspension 120mg/5mg C/F S/F and paracetamol oral suspension 250mg/5mg S/F) display volatile month-to-month prescribing,  with a trough during COVID-19, consistent with reduced childhood infections and primary-care contact. Together, the heatmap and monthly trend plots therefore extend the table by showing that COVID-era changes in Scottish analgesic prescribing were primarily compositional and gradual, rather than a one-off shock in total volume.
+
+## Conclusion
+
+Using Scottish community prescribing data, this analysis shows that the COVID-19 pandemic didn't substantially change the overall volume of analgesic prescribing, but it did coincide with small yet meaningful shifts in which drugs were used. Across all three periods, paracetamol 500mg and co-codamol 30/500mg remain dominant and even gain share, while tramadol 50 mg and some higher-dose opioid combinations decline. Paediatric paracetamol suspensions display a trough during restrictions consistent with reduced childhood infections and lower primary-care attendance, followed by recovery as contact patterns normalised.
+These findings suggest that existing opioid-stewardship efforts in Scottish primary care continued through the pandemic, with no evidence of a COVID-driven surge in long-term strong-opioid use. COVID-related disruptions appear to have produced short-term spikes (for example, stockpiling in early 2020) and temporary dips, but not a lasting step-change in overall analgesic burden.
+The work has limitations: it is based on aggregated dispensing data, cannot distinguish new from repeat prescriptions, and simplifies a complex pandemic into three broad periods. Nevertheless, it illustrates how openly available prescribing data and reproducible R code can be used to tell a clear data story about health-system resilience. A similar workflow—combining period summaries, share-change heatmaps and monthly trajectories—could be applied to other drug classes to monitor how policy changes or future shocks affect community prescribing.
+### could also track the trend for longer times and see how post-covid shock shifted analgesic use. 
+```
 
