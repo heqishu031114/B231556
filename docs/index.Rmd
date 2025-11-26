@@ -7,10 +7,28 @@ date: "2025/11/27"
 ```{r setup, include=FALSE}
 # Global chunk options
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
-                      fig.width = 8, fig.height = 5, fig.align = "center")
+                      fig.width = 9, fig.height = 9, fig.align = "center")
 ```
 
-```{r, include=FALSE}
+# Introduction
+The COVID-19 pandemic provides a natural experiment for assessing how a major health-system disruption affected community analgesic prescribing in Scotland. Scotland’s first confirmed COVID-19 case occurred on 1 March 2020, followed by a national lockdown from 24 March 2020, which substantially changed access to and delivery of primary care, including rapid shifts to remote consultations and postponement of elective care (Scottish COVID-19 Inquiry, 2025). Legal restrictions in Scotland were largely removed by 18 April 2022, marking a transition into a “living with COVID” phase (Scottish COVID-19 Inquiry, 2025). In parallel, COVID-19 and its indirect consequences may have influenced population pain burden through delayed rehabilitation, altered injury patterns during restrictions, and post-viral symptoms such as myalgia or headache (NHS, 2025). 
+This analysis uses Public Health Scotland “Prescriptions in the Community” data to describe how analgesic prescribing evolved across three non-overlapping 26-month windows, defined for comparability as:
+
+-	Before COVID: January 2018 – February 2020  
+-	During COVID: March 2020 – April 2022  
+-	After COVID: May 2022 – June 2024
+
+The primary outcome is the number of paid items for analgesics (BNF section 04.07), providing a consistent indicator of prescribing volume over time (Open Prescribing, 2025; Public Health Scotland, 2025). The analysis addresses three questions:
+
+1. Did the overall analgesic prescribing volume change across the three periods?
+
+2. Which specific analgesic products dominated prescribing before, during and after COVID-19, and how did their shares change?
+
+3. Were any observed changes brief responses around the onset of the pandemic, or did they develop into longer-term shifts in practice?
+To answer these questions, the report summarises the top-10 analgesic products by volume in each period, examines changes in their percentage share using a heatmap, and then evaluates monthly time-series for both total analgesic items and the union of top-10 drugs.
+
+# Data Loading
+```{r}
 ## Purpose: Load core packagess for data wrangling, tables, paths, and plotting
 #Load libraries
 library(tidyverse)
@@ -21,53 +39,20 @@ library(scales) # number/percent formatting
 library(glue) # string interpolation for labels
 ```
 
-## Introduction
-The COVID-19 pandemic created a natural experiment for testing whether a major healthcare-system shock altered community analgesic prescribing in Scotland. From March 2020 onward, general practice rapidly shifted to remote consultations, elective procedures were postponed, and patterns of injury and infection changed under repeated lockdowns. At the same time, COVID-19 itself may have influenced population pain burden through post-viral symptoms, delayed rehabilitation, and changes in mental health. This project uses Public Health Scotland "Prescriptions in the Community" data to examine whether these disruptions were associated with measurable changes in analgesic prescribing. I focus on British National Formulary (BNF) section 04.07 (analgesics) and compare prescribing "before", "during", and "after" the main COVID-19 restriction period.To capture pre-, mid- and post-pandemic practice with similar follow-up, the three non-overlapping 26-month windows were defined as:
-Before COVID:January 2018 – February 2020  
-During COVID: March 2020 – April 2022  
-After COVID: May 2022 – June 2024
-
-The primary outcome is the "number of paid items", a standard indicator of community prescribing volume. 
-The central questions are: 
-1. Did the overall volume of community analgesic prescribing change across three periods?
-2. Which specific analgesic products dominated prescribing before, during and after COVID-19, and did their relative shares shift?
-3. Were any changes short-lived spikes around the pandemic onset, or did they evolve into sustained trends?
-To answer these, a period-level summary of the top 10 analgesic product were constructed by volume. Their changes in drug share were then examined using a heatmap, and a month-by-month trajectories for the same union of top-ten drugs were explored. 
-
-The analysis proceeds in three steps:
-
-1.Top-10 table by period (Table 1).
-Within each period, I ranked analgesic items by paid items and selected the top ten. For each of these, I calculated its share of all analgesic items in that period (`share_pct = paid_items / total_paid_items`) and formatted the results using `gt` into a multi-panel table grouped by period.
-
-2.Changes in share for the union of top-ten drugs (Figure 1, heatmap). 
-I took the union of BNF codes that appeared in the top ten in any period and recomputed their shares within each period. These were reshaped into a wide table (`union_shares`) and then into contrasts (During vs Before, After vs During, After vs Before). The resulting percentage-point changes were displayed as a heatmap, with warm colours indicating increased share and cool colours indicating decreased share.
-
-3.Monthly time-series for total and individual drugs (Figures 2–3). 
-Using the full monthly dataset (`AllMonthly`), I calculated total analgesic paid items per month and plotted them across the entire study period with a LOESS smoother and a shaded band marking the COVID restriction window. I then repeated this for the union of top-ten drugs, faceting by drug to show how individual trajectories evolved across time and through the pandemic.
-
-Together, these steps allow me to move from a high-level view of which drugs dominate prescribing, to how their relative importance shifted, and finally to whether those changes represent brief shocks or longer-term shifts in practice.
-
-
-
-## Data and Methods
 ```{r}
 ## Purpose: Import data from before, during, and after COVID-19, keeping only BNF code, BNF item drscription, and number of paid items
 read_cols <- function(path){read_csv(path) %>%
     clean_names() %>%
     select(any_of(c("bnf_item_code", "bnf_item_description", "number_of_paid_items")))}
-
 # Before COVID data
 FileBefore <- list.files(here("data","before"), pattern="csv", full.names=TRUE)
 DataBefore <- map_dfr(FileBefore, read_cols)
-
 # During COVID data
 FileDuring <- list.files(here("data","during"), pattern="csv", full.names=TRUE)
 DataDuring <- map_dfr(FileDuring, read_cols)
-
 # After COVID data
 FileAfter <- list.files(here("data","after"), pattern="csv", full.names=TRUE)
 DataAfter <- map_dfr(FileAfter, read_cols)
-
 # readr reports parsing warnings because some unused columns contain mixed or irregular values. Selected columns were checked and are clean,the warnings do not affect analysis
 problems(DataBefore) %>%
   filter(col %in% c("bnf_item_code","bnf_item_description","number_of_paid_items"))
@@ -76,7 +61,6 @@ problems(DataDuring) %>%
 problems(DataAfter) %>%
   filter(col %in% c("bnf_item_code","bnf_item_description","number_of_paid_items"))
 ```
-
 
 ```{r}
 ## Purpose: Collapse monthly rows into period-level totals for each analgesic code (BNF04.07), and compute total analgesic volume per period
@@ -88,7 +72,6 @@ AnalgesicsPeriod <- function(df, period_label) {df %>%
     summarise(paid_items = sum(number_of_paid_items, na.rm = TRUE),
               bnf_item_description = first(bnf_item_description), .groups = "drop") %>% 
     mutate(period = period_label)} 
-
 # Apply to each period and stack into a table
 AnalgesicsAllPeriods <- bind_rows(
   AnalgesicsPeriod(DataBefore, "Before COVID"), 
@@ -97,14 +80,20 @@ AnalgesicsAllPeriods <- bind_rows(
   mutate(period = factor(period, levels=c("Before COVID", "During COVID", "After COVID")))
 ```
 
-## Results
+# Results
+## Table 1.Top 10 Most Prescribed Analgesics Before, During, and After COVID-19
+Table 1 shows that community analgesic prescribing in Scotland is consistently dominated by a similar set of products across all three periods. Paracetamol 500mg tablets and co-codamol 30/500mg tablets remain the top two items before, during, and after COVID-19, together accounting for approximately 40-43% of all analgesic paid items in each window, indicating that first-line simple and combination analgesics remained the backbone of pain management despite major disruption to primary-care services. Tramadol 50mg capsules and dihydrocodeine 30mg tablets also appear in the top ranks throughout, indicating a stable core formulary. 
+Total analgesic volume changes little over time: 18.83 million items before COVID, 18.54 million during, and 19.08 million after. This suggests that COVID-19 didn’t produce a large net increase or decrease in community analgesic use, but rather subtle shifts in which agents were used. Within the top 10, paracetamol 500mg and co-codamol 30/500mg gain about 1-1.3% in share between pre- and post-COVID periods, whereas tramadol 50mg capsules and co-codamol 8/500mg tablets gradually lose share. These patterns are consistent with a gradual shift away from stronger or higher-dose opioid combinations toward first-line paracetamol-based regimens, aligning with ongoing opioid-stewardship efforts in UK primary care (Levy, Lord, and Lobo, 2021), rather than a COVID-specific surge in strong analgesic use. 
+Paediatric paracetamol suspensions (120mg/5 mL and 250mg/5mL) each contribute around 2-2.6% of items, with a dip during COVID and partial recovery afterwards. This is consistent with reduced childhood infections and fewer GP consultations during lockdown, followed by a rebound in routine paediatric prescribing once contact rates recovered. 
+Sumatriptan 50mg tablet (acute migraine treatment) maintains a low but gradually rising share across periods, while morphine oral solution 10mg/5mL only enters the top 10 in the post-COVID window with a small share, suggesting some intensification of community-managed severe pain in a minority of patients.
+Overall, Table 1 indicates that COVID-19 didn’t remarkedly alter total volume of analgesic prescription and the dominating analgesics prescription, but there is a gradual shift in the mix of drugs: simple paracetamol-based regimens become slightly more prominent, while some higher-strength opioid options contribute a smaller proportion of community analgesic items.
+
 ```{r}
 ## Purpose: Identify the top-10 mostly prescribed analgesics in each period, compute their shares of all analgesic items, and display them in a formatted table
 # Calculate total paid item quantity of analgesics during each period
 Period_totals_data <- AnalgesicsAllPeriods %>%
   group_by(period) %>% 
   summarise(total_paid_items = sum(paid_items, na.rm = TRUE), .groups = "drop") 
-
 # Top10 table
 Top10_each_period_data <- AnalgesicsAllPeriods %>%
   group_by(period) %>% 
@@ -116,8 +105,7 @@ Top10_each_period_data <- AnalgesicsAllPeriods %>%
   mutate(share_pct = paid_items/total_paid_items,
           period = factor(period, levels = c("Before COVID","During COVID","After COVID")),
          period_label = glue("{period} (Total analgesics: {comma(total_paid_items)})"))
-  
-# Make this table pretty 
+  # Make this table pretty 
 Top10_each_period_table <- Top10_each_period_data %>% 
   select(period, period_label, rank, bnf_item_code, bnf_item_description, paid_items, share_pct) %>% 
   arrange(period, rank) %>% 
@@ -140,13 +128,10 @@ Top10_each_period_table <- Top10_each_period_data %>%
 Top10_each_period_table
 ```
 
-## Intepretation
-Across all three 26-month periods, analgesic prescription in Scotland is dominated by a similar set of drugs. The same core products—paracetamol 500mg tablets, co-codamol 30/500mg tablets, tramadol 50mg capsules, and dihydrocodeine 30mg tablets appear in the top ranks before, during, and after COVID-19. Together, paracetamol 50mg and co-codamol 30/50mg account for roughly 40-43% of all analgesic items in each period, indicating that first-line simple and combination analgesics remained the backbone of pain management despite major disruption to primary-care services. 
-The total volume of analgesics prescription is stable: 18.83 million items before COVID, 18.54 million during, and 19.08 million after. This suggests that COVID-19 didn’t produce a large net increase or decrease in community analgesic use, but rather subtle shifts in which agents were used. Within the top 10, paracetamol 500mg increases its share from ~20.4% pre-pandemic to ~21.7% during and after, while co-codamol 30/500mg shows a similar small rise from ~20% to ~21-22%. In contrast, tramadol 50mg falls from ~9.1% of all analgesics pre-COVID to ~8.6% during and ~8% after, and co-codamol 8/500mg also declines steadily. These patterns are consistent with a gradual shift away from stronger or higher-dose opioid combinations toward first-line paracetamol-based regimens, aligning with ongoing opioid-stewardship efforts in UK primary care, rather than a COVID-specific surge in strong analgesic use/////. 
-Several more niche products show smaller but interpretable changes. Paediatric paracetamol suspensions (120 mg/5 mL and 250 mg/5 mL) remain in the top 10 across all periods but contribute a modest and shifting share: together they account for roughly 4–5% of analgesic items before COVID, dip during the pandemic (particularly the 120 mg/5 mL suspension), and partially recover or even overshoot after restrictions ease. This is consistent with reduced childhood infections and fewer GP consultations during lockdown, followed by a rebound in routine paediatric prescribing once contact rates recovered. Sumatriptan 50 mg (acute migraine treatment) maintains a low but gradually rising share across periods, while morphine oral solution 10 mg/5 mL only enters the top 10 in the post-COVID window, albeit with a small share (~1.6%), suggesting some intensification of community-managed severe pain in a minority of patients.
-Overall, the table indicates a modest shift towards first-line simple analgesics and away from some higher-risk opioids, rather than a large change in total analgesic load.
-
-
+## Figure 1. Change in Share of Union Top10 Analgesics Prescription
+To explore how analgesic prescribing changed between periods, Figure 1 presents a heatmap of percentage-point changes in share for the union of Top-10 drugs (“During vs Before”, “After vs During”, “After vs Before”). Warm cells indicate gains in share and cool cells indicate losses. 
+This reveals that paracetamol 500mg tablets and co-codamol 30/500mg tablets underwent the strongest early step-increase by 1–1.3% between the pre-COVID and COVID windows that was largely sustained afterwards. In contrast, high-dose combinations (tramadol 50mg capsules, co-dydramol 10/500mg, co-codamol 8/500 mg) show consistent losses across both transitions. It also highlights drugs with small absolute shares but relatively large relative shifts, such as paediatric suspensions, which show a clear trough during COVID and rebound afterwards.
+Overall, Figure 1 suggests a gradual reweighting of prescribing toward simple and lower-dose combination analgesics and away from some stronger opioid formulations, rather than the emergence of entirely new products.
 ```{r}
 ## Track how the share of each union top-10 drug changes between periods and visualise the percentage-point differences as a heatmap
 # Union of Top-10 analgesic codes across all periods
@@ -161,21 +146,18 @@ union_shares <- AnalgesicsAllPeriods %>%
   pivot_wider(names_from  = period,
               values_from = share,
               values_fill = 0)
-
-# Contrast the percentage share of the union top-10 drugs before vs during vs after COVID and 
+# Contrast the percentage share of the union top-10 drugs before vs during vs after COVID
 union_change <- union_shares %>%
   mutate(`During vs Before` = `During COVID` - `Before COVID`,
          `After vs During`  = `After COVID`  - `During COVID`,
          `After vs Before`  = `After COVID`  - `Before COVID`) %>%
   pivot_longer(cols = c(`During vs Before`,`After vs During`,`After vs Before`), names_to = "contrast", values_to = "delta") 
-
 # Order rows by maximum absolute share change across contrasts to highlight drugs with the largest compositional shifts
 order_levels <- union_change %>%
   group_by(bnf_item_description) %>%
   summarise(max_abs = max(abs(delta)), .groups="drop") %>%
   arrange(desc(max_abs)) %>%
   pull(bnf_item_description)
-
 # Heatmap
 union_change_plot <- union_change %>% 
   mutate(contrast = factor(contrast, levels = c("During vs Before", "After vs During", "After vs Before")),
@@ -188,29 +170,23 @@ ggplot(union_change_plot,
   geom_text(aes(label = percent(delta, accuracy = 0.1)), size = 3.2, fontface = "bold") +
   scale_fill_gradient2(low = "#2166ac", mid = "white", high = "#b2182b", limits = c(-lim, lim), breaks = pretty_breaks(5), labels = percent_format(accuracy = 0.1), name = "Δ share")+
   scale_x_discrete(position = "top") +
-  labs(title = "Change in Share of Analgesics Prescription",
+  labs(title = "Change in Share of Union Top10 Analgesics Prescription",
        subtitle = "Union of Top-10 drugs across periods (values are percentage_point changes)", x = NULL, y = NULL, caption = "Warm colours = increased share; Cool colours = decreased share.") + theme_minimal(base_size = 12) + theme(panel.grid = element_blank(), axis.text.x = element_text(face = "bold", size = 10), axis.text.y = element_text(size = 9), plot.title = element_text(face = "bold", size = 15, hjust = 0.5), plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b=8)), legend.title = element_text(face = "bold"), legend.key.height = unit(1.1, "cm"), plot.margin = margin(10, 12, 10, 10))
 ```
 
-## Intepretation
-Because Table 1 summarises each 26-month window into a single average, it cannot show how these differences emerged over time or whether they were transient spikes versus sustained shifts. To explore this, I restricted attention to the union of the Top-10 drugs across periods and calculated how each drug’s share changed between time windows (Figure X, heatmap). The heatmap visualises these percentage-point changes in share, with warm colours indicating increases and cool colours indicating decreases. This highlights that paracetamol 500 mg and co-codamol 30/500 mg gained ~1–1.3 percentage points after COVID relative to before, whereas tramadol 50 mg and paediatric paracetamol 120 mg/5 mL lost share, consistent with a gradual tilt toward simpler, non-opioid regimens.
-
-
-
-
+## Figure 2. Monthly Presciption of All Analgesics in Scotland 
+To assess whether changes in drug share reflected redistribution within a stable total volume or genuine shifts in overall analgesic use, Figure 2 plots monthly totals for all BNF 04.07 items from late 2017 to mid-2024, with the COVID restriction period shaded. The series shows a pronounced peak around March 2020 (i.e. start of COVID-19), followed by a temporary reduction during the restriction period and a steady recovery from 2022 onwards, reaching slightly higher levels than in the immediate pre-pandemic years. This pattern indicates a short-lived surge at the onset of COVID-19, a mid-pandemic contraction, and a subsequent return to- and modest exceedance of- pre-COVID prescribing volumes. The initial spike may reflect anticipatory stockpiling. The mid-pandemic contraction is consistent with reduced primary-care contact and fewer non-COVID illnesses. The later rebound and slight overshoot may reflect catch-up of deferred care and ongoing pain needs in patients whose treatment or procedures were delayed.
 ```{r}
 ## Purpose: Show overall monthly volume of all analgesics across the study period
 # Load Monthly Analgesics Data
 read_cols_month <- function(path, period_label){
   yyyymm <- str_extract(basename(path), "\\d{6}") 
   
-  read_csv(path, show_col_types = FALSE) %>%
-    clean_names() %>%
-    select("bnf_item_code", "bnf_item_description", "number_of_paid_items") %>%
-    mutate(covid_period = period_label,
-      month  = yyyymm,
-      bnf_item_description = str_squish(bnf_item_description)) %>% 
-    filter(startsWith(bnf_item_code, "0407"))}
+read_csv(path, show_col_types = FALSE) %>%
+  clean_names() %>%
+  select("bnf_item_code", "bnf_item_description", "number_of_paid_items") %>%
+  mutate(covid_period = period_label, month  = yyyymm, bnf_item_description = str_squish(bnf_item_description)) %>% 
+  filter(startsWith(bnf_item_code, "0407"))}
 
 load_monthly <- function(folder, period_label){
   files <- list.files(here("data", folder), pattern = "csv", full.names = TRUE)
@@ -228,19 +204,18 @@ AllMonthly <- bind_rows(
 # To confirm parsing issue unrelated
 problems(AllMonthly) %>%
   filter(col %in% c("bnf_item_code","bnf_item_description","number_of_paid_items", "month"))
-
 # Monthly totals for analgesics Figure
 Analgesics_monthly_totals <- AllMonthly %>%
   group_by(month) %>%
   summarise(total_paid_items = sum(number_of_paid_items, na.rm = TRUE), .groups = "drop") %>% mutate(month_date = ym(month))
-
+# Define periods on graph
 covid_start <- ym("2020-03")
 covid_end <- ym("2022-05")
 covid_band <- tibble(xmin = covid_start,
                      xmax = covid_end,
                      ymin = -Inf,
                      ymax = Inf)
-
+# Plot Monthly Presciption of All Analgesics in Scotland
 ggplot(Analgesics_monthly_totals,
        aes(x = month_date, y = total_paid_items)) +
   geom_rect(data = covid_band,
@@ -250,8 +225,8 @@ ggplot(Analgesics_monthly_totals,
   geom_smooth(method = "loess", se = FALSE, colour = "black") +
   scale_x_date(date_breaks="3 months", date_labels="%Y-%m") +
   scale_y_continuous(labels=comma) +
-  labs(title = "Monthly Analgesic Prescription in Scotland (BNF 0407*)",
-       subtitle = "Grey band = COVID restriction period",
+  labs(title = "Monthly Presciption of All Analgesics in Scotland (BNF 04.07)",
+       subtitle = "Grey band = COVID restriction period; black curve = LOESS trend",
     x = "Year-Month",
     y = "Total Paid Items") +
   theme_minimal(base_size = 14) +
@@ -263,7 +238,10 @@ ggplot(Analgesics_monthly_totals,
         plot.subtitle = element_text(size = 10, margin = margin(b = 6), hjust = 0.5))
 ```
 
-
+## Figure 3. Monthly Prescription of Union Top10 Analgesics
+To examine how individual drugs contributed to the period-to-period shifts seen in Table 1 and Figure 1, and decompose the overall change in Figure 2 to specific drug patterns, Figure 3 plots monthly counts for the same union of Top-10 analgesics, each with its own LOESS trend (black curve) and the COVID restriction period shaded.The LOESS line summarises the underlying trend by averaging over month-to-month noise.
+Several distinct patterns emerged. First, paracetamol 500mg tablets and co-codamol 30/500mg tablets show clear pre-lockdown spikes at the start of COVID around March 2020 and then settle onto higher post-pandemic baselines, matching their increased post-COVID shares in Figure 1. In contrast, tramadol 50mg capsules, co-dydramol 10/500 mg and co-codamol 8/500 mg tablets display steady downward trajectories across the entire window, with only minor perturbation during COVID; this aligns with the sustained reductions in their relative shares on the heatmap and the small falls in Table 1. 
+Second, paediatric paracetamol suspensions (120mg/5mL and 250mg/5mL) exhibit pronounced month-to-month variability but both show a visible trough within the shaded COVID band followed by recovery or overshoot afterwards. This pattern is consistent with the loss of share for 120mg/5 mL and modest gain for 250mg/5mL in Figure 1 and supports the interpretation of reduced paediatric consultations and infections during restrictions, followed by a rebound in community prescribing. Finally, codeine 30mg tablets, dihydrocodeine 30mg tablets, sumatriptan 50mg tablets and morphine oral solution 10mg/5mL all show gradual upward trends, with morphine solution mainly rising in the later, post-COVID phase. Together with the total-volume series (Figure 2), these facets indicate that the pandemic produced a brief disturbance in overall analgesic volume, superimposed on longer-term shifts away from some higher-risk opioid combinations and towards paracetamol-based and selected alternative agents.
 ```{r}
 ## Purpose: Examine drug-specific trajectories for the union of top-10 analgesics
 # Union of Top10 analgesic codes across all periods, and a label for plotting
@@ -271,10 +249,8 @@ code_labels <- union_shares %>%
   distinct(bnf_item_code, bnf_item_description) %>% 
   mutate(bnf_item_description = str_squish(bnf_item_description),
          label = bnf_item_description)
-
 top10_union_codes <- code_labels %>% 
   pull(bnf_item_code)
-
 # Monthly totals for Union drugs only
 top10_monthly_code <- AllMonthly %>%
  filter(bnf_item_code %in% top10_union_codes) %>%
@@ -282,17 +258,15 @@ top10_monthly_code <- AllMonthly %>%
   group_by(month_date, bnf_item_code) %>%
   summarise(paid_items = sum(number_of_paid_items, na.rm = TRUE), .groups = "drop") %>%
   left_join(code_labels, by = "bnf_item_code")
-
-
-# plot
+# Plot Monthly Prescription of Union Top10 Analgesics
 ggplot(top10_monthly_code, aes(x = month_date, y = paid_items)) +
   geom_rect(data = covid_band,
             aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax), inherit.aes = FALSE, fill = "grey85", alpha = 0.5) +
   geom_line(linewidth = 0.7, colour = "#2C6BAA") +
   geom_smooth(method = "loess", se = FALSE, linewidth = 0.6, colour = "black")+
-  facet_wrap(~ label, scales = "free_y", ncol = 3, labeller = label_wrap_gen(width = 22)) +
+  facet_wrap(~ label, scales = "free_y", ncol = 2, labeller = label_wrap_gen(width = 22)) +
   scale_x_date(date_breaks = "6 months", date_labels = "%Y-%m") +
-  scale_y_continuous(labels = comma) +
+  scale_y_continuous(labels = comma, breaks = scales::pretty_breaks(4)) +
   labs(title = "Monthly Prescription for Union of Top-10 Analgesics", subtitle = "Grey band = COVID restriction period; black curve = within-drug LOESS trend", x = "Year-Month", y = "Number of paid items")+
   theme_minimal(base_size = 12) +
   theme(
@@ -307,15 +281,20 @@ ggplot(top10_monthly_code, aes(x = month_date, y = paid_items)) +
     plot.subtitle = element_text(size = 10, margin = margin(b = 6), hjust = 0.5))
 ```
 
-## Intepretation
+# Conclusion
+This analysis suggests that COVID-era changes in Scottish community analgesic prescribing were modest in volume but meaningful in composition. Total paid items for analgesics were very similar across the three 26-month windows, with only a brief spike around March 2020, a mid-pandemic dip, and a modest recovery above pre-COVID levels. In contrast, the mix of drugs changed: prescribing remained concentrated in a small set of agents, but within that group paracetamol 500mg and co-codamol 30/500mg became slightly more prominent, while tramadol 50mg and other higher-dose opioid combinations declined. Paediatric paracetamol suspensions showed a clear trough during restrictions and subsequent rebound, consistent with temporary reductions in childhood infections and primary-care contact. Together, the time-series and share analyses indicate that early-pandemic disturbances were short-lived, whereas the gradual move away from some opioid formulations and toward paracetamol-based regimens represents a longer-term shift that continued beyond the main restriction period.
+These findings are consistent with ongoing opioid-stewardship efforts in Scottish primary care, with no evidence of a sustained COVID-driven surge in strong-opioid use. However, several limitations qualify the interpretation. Paid items capture dispensing events but not dose, treatment duration, indication, or over-the-counter and hospital use. The analysis focuses on aggregate data and the union of the top-10 drugs, so it cannot reveal patient-level differences by age, deprivation or diagnosis, nor trends in less commonly prescribed agents. Collapsing a complex pandemic into three broad periods also obscures shorter policy phases and regional variation, and the descriptive design cannot establish causality.
+Future work could extend the time horizon to see whether post-COVID patterns persist or attenuate, and link community prescribing to richer datasets—such as demographic information, chronic pain registers, procedure and discharge data, or infection surveillance—to examine how trends differ across clinical and social groups. Using dose-based metrics (e.g. defined daily doses or oral morphine equivalents) and applying interrupted time-series methods around key policy and pandemic milestones would allow more formal assessment of changes in true analgesic exposure and stewardship impact. The workflow used here could also be applied to other drug classes to monitor how future system shocks or policy interventions shape community prescribing.
 
-To distinguish short-lived pandemic artefacts from sustained trends, I plotted monthly prescribing trajectories for the same union of Top-10 drugs (Figure Y, faceted time-series) alongside the overall monthly total of all analgesics (Figure Z). The overall series shows a brief spike in early 2020 at the start of COVID-19, likely due to people panic and stock up behaviours //////; and a dip during mid-pandemic, but a clear recovery and mild upward trend post-2022/////. Within this, the faceted plots reveal drug-specific patterns: paracetamol 500 mg tablets and co-codamol 30/500 mg tablet show a sharp surge at the onset of COVID, followed by a higher post-pandemic baseline; tramadol 50 mg declines steadily across the whole period; and paediatric suspensions (i.e. paracetamol oral suspension 120mg/5mg C/F S/F and paracetamol oral suspension 250mg/5mg S/F) display volatile month-to-month prescribing,  with a trough during COVID-19, consistent with reduced childhood infections and primary-care contact. Together, the heatmap and monthly trend plots therefore extend the table by showing that COVID-era changes in Scottish analgesic prescribing were primarily compositional and gradual, rather than a one-off shock in total volume.
+# References
+Levy, N., Lord, L.J. and Lobo, D.N. (2021). ‘UK recommendations on opioid stewardship’, BMJ, 372, pp.m4901. Available at: https://doi.org/10.1136/bmj.m4901.
 
-## Conclusion
+NHS (2025) Long COVID. Available at: https://www.nhs.uk/conditions/long-covid/#:~:text=a%20high%20temperature,anxiety%20and%20depression (Accessed: 26 November 2025).
 
-Using Scottish community prescribing data, this analysis shows that the COVID-19 pandemic didn't substantially change the overall volume of analgesic prescribing, but it did coincide with small yet meaningful shifts in which drugs were used. Across all three periods, paracetamol 500mg and co-codamol 30/500mg remain dominant and even gain share, while tramadol 50 mg and some higher-dose opioid combinations decline. Paediatric paracetamol suspensions display a trough during restrictions consistent with reduced childhood infections and lower primary-care attendance, followed by recovery as contact patterns normalised.
-These findings suggest that existing opioid-stewardship efforts in Scottish primary care continued through the pandemic, with no evidence of a COVID-driven surge in long-term strong-opioid use. COVID-related disruptions appear to have produced short-term spikes (for example, stockpiling in early 2020) and temporary dips, but not a lasting step-change in overall analgesic burden.
-The work has limitations: it is based on aggregated dispensing data, cannot distinguish new from repeat prescriptions, and simplifies a complex pandemic into three broad periods. Nevertheless, it illustrates how openly available prescribing data and reproducible R code can be used to tell a clear data story about health-system resilience. A similar workflow—combining period summaries, share-change heatmaps and monthly trajectories—could be applied to other drug classes to monitor how policy changes or future shocks affect community prescribing.
-### could also track the trend for longer times and see how post-covid shock shifted analgesic use. 
-```
+Open Prescribing (2025) All BNF sections. Available at: https://openprescribing.net/bnf/ (Accessed: 26 November 2025).
+
+Public Health Scotland (2025) Prescriptions in the Community. Available at: https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community (Accessed: 26 November 2025). 
+
+Scottish COVID-19 Inquiry (2025) COVID-19 Pandemic in Scotland - a timeline of key dates. Available at: https://www.covid19inquiry.scot/covid-19-pandemic-scotland-timeline-key-dates (Accessed: 26 November 2025). 
+
 
