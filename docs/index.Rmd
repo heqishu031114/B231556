@@ -21,6 +21,7 @@ The COVID-19 pandemic provides a natural experiment for assessing how a major he
 -	After COVID: May 2022 – June 2024
 
 The primary outcome is the number of paid items for analgesics (BNF section 04.07), providing a consistent indicator of prescribing volume over time (Open Prescribing, 2025; Public Health Scotland, 2025). The analysis addresses three questions: 
+
 1. Did the overall analgesic prescribing volume change across the three periods?
 
 2. Which specific analgesic products dominated prescribing before, during and after COVID-19, and how did their shares change?
@@ -103,18 +104,18 @@ Top10_each_period_table <- Top10_each_period_data %>%
   select(period, period_label, rank, bnf_item_code, bnf_item_description, paid_items, share_pct) %>% 
   arrange(period, rank) %>% 
   gt(groupname_col = "period_label") %>%
-  tab_header(title = md("Top 10 Most Prescribed Analgesics Before, During, and After COVID-19")) %>%
+  tab_header(title = md("Table 1. Top 10 Most Prescribed Analgesics Before, During, and After COVID-19")) %>%
   cols_hide(columns = period) %>% 
   cols_label(rank = "Rank", bnf_item_code = "BNF Item Code", bnf_item_description = "BNF Item Description", paid_items = "Number of Paid Items", share_pct = "Share of Analgesics(%)") %>%
   fmt_number(columns = paid_items, decimals = 0, use_seps = TRUE) %>%
-  fmt_percent(columns = share_pct, decimals = 2) %>% 
-  cols_width(rank ~ px(55), bnf_item_code ~ px(130), bnf_item_description ~ px(320), paid_items ~ px(130), share_pct ~ px(130)) %>%
+  fmt_percent(columns = share_pct, decimals = 1) %>% 
+  cols_width(rank ~ px(40), bnf_item_code ~ px(90), bnf_item_description ~ px(260), paid_items ~ px(110), share_pct ~ px(90)) %>%
   cols_align(align = "center", columns = c(rank, bnf_item_code, paid_items, share_pct)) %>%
   cols_align(align = "left", columns = bnf_item_description) %>%
   opt_row_striping() %>%
   tab_style(style = list(cell_fill(color = "#F5F5F5"), cell_text(weight = "bold")), locations = cells_body(columns = rank)) %>%
-  tab_options(row_group.border.top.style = "solid", row_group.border.top.width = px(1), row_group.border.top.color = "black", row_group.padding = px(4)) %>%
-  tab_options(table.font.size = px(11), heading.title.font.size = px(14), heading.subtitle.font.size = px(10), row_group.font.weight = "bold", row_group.font.size = px(11), column_labels.font.weight = "bold", column_labels.border.bottom.width = px(1), table.border.top.width = px(1), table.border.bottom.width = px(1), data_row.padding = px(2))
+  tab_options(row_group.border.top.style = "solid", row_group.border.top.width = px(1), row_group.border.top.color = "black", row_group.padding = px(2)) %>%
+  tab_options(table.font.size = px(9), heading.title.font.size = px(11), heading.subtitle.font.size = px(9), row_group.font.weight = "bold", row_group.font.size = px(9), column_labels.font.weight = "bold", column_labels.border.bottom.width = px(1), table.border.top.width = px(1), table.border.bottom.width = px(1), data_row.padding = px(1))
 Top10_each_period_table
 ```
 
@@ -145,8 +146,7 @@ order_levels <- union_change %>%
   pull(bnf_item_description)
 # Heatmap
 union_change_plot <- union_change %>% 
-  mutate(contrast = factor(contrast, levels = c("During vs Before", "After vs During", "After vs Before")),
-         bnf_item_description = factor(bnf_item_description, levels = rev(order_levels)), drug_label = str_wrap(bnf_item_description, width = 28))
+  mutate(contrast = factor(contrast, levels = c("During vs Before", "After vs During", "After vs Before")), bnf_item_description = factor(bnf_item_description, levels = rev(order_levels)), drug_label = str_wrap(bnf_item_description, width = 28))
 # Symmetric colour limits around 0
 lim <- max(abs(union_change_plot$delta), na.rm = TRUE)
 ggplot(union_change_plot, aes(x = contrast, y = drug_label, fill = delta)) +
@@ -154,8 +154,7 @@ ggplot(union_change_plot, aes(x = contrast, y = drug_label, fill = delta)) +
   geom_text(aes(label = percent(delta, accuracy = 0.1)), size = 3.2, fontface = "bold") +
   scale_fill_gradient2(low = "#2166ac", mid = "white", high = "#b2182b", limits = c(-lim, lim), breaks = pretty_breaks(5), labels = percent_format(accuracy = 0.1), name = "Δ share")+
   scale_x_discrete(position = "top") +
-  labs(title = "Change in Share of Union Top10 Analgesics Prescription",
-       subtitle = "Union of Top-10 drugs across periods (values are percentage_point changes)", x = NULL, y = NULL, caption = "Warm colours = increased share; Cool colours = decreased share.") + theme_minimal(base_size = 12) + theme(panel.grid = element_blank(), axis.text.x = element_text(face = "bold", size = 10), axis.text.y = element_text(size = 9), plot.title = element_text(face = "bold", size = 15, hjust = 0.5), plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b=8)), legend.title = element_text(face = "bold"), legend.key.height = unit(1.1, "cm"), plot.margin = margin(10, 12, 10, 10))
+  labs(title = "Figure 1. Change in Share of Union Top10 Analgesics Prescription", subtitle = "Union of Top-10 drugs across periods (values are percentage_point changes)", x = NULL, y = NULL, caption = "Warm colours = increased share; Cool colours = decreased share.") + theme_minimal(base_size = 12) + theme(panel.grid = element_blank(), axis.text.x = element_text(face = "bold", size = 10), axis.text.y = element_text(size = 9), plot.title = element_text(face = "bold", size = 15, hjust = 0.5), plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b=8)), legend.title = element_text(face = "bold"), legend.key.height = unit(1.1, "cm"), plot.margin = margin(10, 12, 10, 10))
 ```
 
 ## Figure 2. Monthly Presciption of All Analgesics in Scotland 
@@ -174,10 +173,7 @@ read_csv(path, show_col_types = FALSE) %>%
 load_monthly <- function(folder, period_label){
   files <- list.files(here("data", folder), pattern = "csv", full.names = TRUE)
   map_dfr(files, read_cols_month, period_label = period_label)}
-AllMonthly <- bind_rows(
-  load_monthly("before", "Before COVID"),
-  load_monthly("during", "During COVID"),
-  load_monthly("after",  "After COVID")) %>%
+AllMonthly <- bind_rows(load_monthly("before", "Before COVID"), load_monthly("during", "During COVID"), load_monthly("after",  "After COVID")) %>%
   mutate(covid_period = factor(covid_period, levels = c("Before COVID","During COVID","After COVID")), month = as.character(month)) %>%
   filter(!is.na(bnf_item_code), !is.na(bnf_item_description), !is.na(number_of_paid_items), !is.na(month))
 # Confirm parsing issue unrelated
@@ -198,16 +194,9 @@ ggplot(Analgesics_monthly_totals, aes(x = month_date, y = total_paid_items)) +
   geom_smooth(method = "loess", se = FALSE, colour = "black") +
   scale_x_date(date_breaks="3 months", date_labels="%Y-%m") +
   scale_y_continuous(labels=comma) +
-  labs(title = "Monthly Presciption of All Analgesics in Scotland (BNF 04.07)",
-       subtitle = "Grey band = COVID restriction period; Black curve = LOESS trend",
-    x = "Year-Month", y = "Total Paid Items") +
+  labs(title = "Figure 2. Monthly Presciption of All Analgesics in Scotland (BNF 04.07)", subtitle = "Grey band = COVID restriction period; Black curve = LOESS trend", x = "Year-Month", y = "Total Paid Items") +
   theme_minimal(base_size = 14) +
-  theme(panel.grid.major.x = element_blank(),
-        panel.grid.minor = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        plot.title.position = "plot",
-        plot.title = element_text(face = "bold", size = 15, hjust = 0.5),
-        plot.subtitle = element_text(size = 10, margin = margin(b = 6), hjust = 0.5))
+  theme(panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(), axis.text.x = element_text(angle = 45, hjust = 1), plot.title.position = "plot", plot.title = element_text(face = "bold", size = 15, hjust = 0.5), plot.subtitle = element_text(size = 10, margin = margin(b = 6), hjust = 0.5))
 ```
 
 ## Figure 3. Monthly Prescription of Union Top10 Analgesics
@@ -239,7 +228,7 @@ ggplot(top10_monthly_code, aes(x = month_date, y = paid_items)) +
   facet_wrap(~ label, scales = "free_y", ncol = 2, labeller = label_wrap_gen(width = 22)) +
   scale_x_date(date_breaks = "6 months", date_labels = "%Y-%m") +
   scale_y_continuous(labels = comma, breaks = scales::pretty_breaks(4)) +
-  labs(title = "Monthly Prescription for Union of Top-10 Analgesics", subtitle = "Grey band = COVID restriction period; Black curve = within-drug LOESS trend", x = "Year-Month", y = "Number of paid items")+
+  labs(title = "Figure 3. Monthly Prescription for Union of Top-10 Analgesics", subtitle = "Grey band = COVID restriction period; Black curve = within-drug LOESS trend", x = "Year-Month", y = "Number of paid items")+
   theme_minimal(base_size = 12) +
   theme(panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(), strip.text = element_text(face = "bold", size = 10, margin = margin(b=2)), strip.background = element_rect(fill = NA, colour = NA), panel.spacing = unit(0.9, "lines"), axis.text.x = element_text(size = 8, angle = 45, hjust = 1), plot.title.position = "plot", plot.title = element_text(face = "bold", size = 15, hjust = 0.5), plot.subtitle = element_text(size = 10, margin = margin(b = 6), hjust = 0.5))
 ```
@@ -265,7 +254,8 @@ NHS (2022a) About tramadol. Available at: https://www.nhs.uk/medicines/tramadol/
 
 NHS (2022b) About sumatriptan. Available at: https://www.nhs.uk/medicines/sumatriptan/about-sumatriptan/ (Accessed: 26 November 2025).
 
-NHS (2024) A patient’s guide to Oramorph (morphine sulphate oral solution10mg/5ml) for use in breathlessness. Available at: https://www.buckshealthcare.nhs.uk/pifs/a-patients-guide-to-oramorph-morphine-sulphate-oral-solution-10mg-5ml-for-use-in-breathlessness/#:~:text=What%20is%20Oramorph?,with%20continued%20use%20of%20Oramorph. (Accessed: 26 November 2025).
+NHS (2024) A patient’s guide to Oramorph (morphine sulphate oral solution10mg/5ml) for use in breathlessness. Available at:
+https://www.buckshealthcare.nhs.uk/pifs/a-patients-guide-to-oramorph-morphine-sulphate-oral-solution-10mg-5ml-for-use-in-breathlessness/#:~:text=What%20is%20Oramorph?,with%20continued%20use%20of%20Oramorph. (Accessed: 26 November 2025).
 
 NHS (2023) How and when to take co-codamol for adults. Available at: https://www.nhs.uk/medicines/co-codamol-for-adults/how-and-when-to-take-co-codamol-for-adults/ (Accessed: 26 November 2025).
 
