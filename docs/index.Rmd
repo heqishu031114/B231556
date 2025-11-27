@@ -11,24 +11,22 @@ output:
 # Global chunk options
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.align = "center")
 ```
-
 # Introduction
-The COVID-19 pandemic provides a natural experiment for assessing how a major health-system disruption affected community analgesic prescribing in Scotland. Scotland’s first confirmed COVID-19 case occurred on 1 March 2020, followed by a national lockdown from 24 March 2020, which substantially changed access to and delivery of primary care, including rapid shifts to remote consultations and postponement of elective care (Scottish COVID-19 Inquiry, 2025). Legal restrictions in Scotland were largely removed by 18 April 2022, marking a transition into a “living with COVID” phase (Scottish COVID-19 Inquiry, 2025). In parallel, COVID-19 and its indirect consequences may have influenced population pain burden through delayed rehabilitation, altered injury patterns during restrictions, and post-viral symptoms such as myalgia or headache (NHS, 2025). 
-This analysis uses Public Health Scotland “Prescriptions in the Community” data to describe how analgesic prescribing evolved across three non-overlapping 26-month windows, defined for comparability as:
+The COVID-19 pandemic provides a natural experiment for assessing how a major health-system disruption affected community analgesic prescribing in Scotland. Scotland’s first confirmed COVID-19 case on 1 March 2020 was followed by a national lockdown on 24 March 2020, which substantially changed access to primary care through rapid expansion of remote consultations and postponement of elective care (Scottish COVID-19 Inquiry, 2025). Legal restrictions were largely removed by 18 April 2022. COVID-19 also changed the population’s symptom burden. Headache, myalgia, musculoskeletal pain and persistent cough were common features of both acute infection and post-viral illness (Evcik, 2023; Nalbandian et al., 2021). As a result, analgesics, from first-line agents such as paracetamol to stronger options such as co-codamol were frequently used to manage moderate to severe symptoms. These clinical patterns provide important context for interpreting prescribing changes across the pandemic. Using Public Health Scotland “Prescriptions in the Community” data, this analysis examines how analgesic prescribing evolved across three non-overlapping 26-month windows: 
 
 -	Before COVID: January 2018 – February 2020  
+
 -	During COVID: March 2020 – April 2022  
+
 -	After COVID: May 2022 – June 2024
 
-The primary outcome is the number of paid items for analgesics (BNF section 04.07), providing a consistent indicator of prescribing volume over time (Open Prescribing, 2025; Public Health Scotland, 2025). The analysis addresses three questions:
-
+The primary outcome is the number of paid items for analgesics (BNF section 04.07), providing a consistent indicator of prescribing volume over time (Open Prescribing, 2025; Public Health Scotland, 2025). The analysis addresses three questions: 
 1. Did the overall analgesic prescribing volume change across the three periods?
 
 2. Which specific analgesic products dominated prescribing before, during and after COVID-19, and how did their shares change?
 
 3. Were any observed changes brief responses around the onset of the pandemic, or did they develop into longer-term shifts in practice?
-To answer these questions, the report summarises the top-10 analgesic products by volume in each period, examines changes in their percentage share using a heatmap, and then evaluates monthly time-series for both total analgesic items and the union of top-10 drugs.
-
+To answer these questions, the report summarises the top-10 analgesics by volume in each period, analysing changes in their percentage share using a heatmap, and evaluates monthly time-series for both total analgesic items and the union of top-10 analgesics.
 # Data Loading
 ```{r}
 ## Purpose: Load core packagess for data wrangling, tables, paths, and plotting
@@ -75,11 +73,15 @@ AnalgesicsAllPeriods <- bind_rows(AnalgesicsPeriod(DataBefore, "Before COVID"), 
 ```
 
 # Results
-## Table 1.Top 10 Most Prescribed Analgesics Before, During, and After COVID-19
-Table 1 shows that community analgesic prescribing in Scotland is consistently dominated by a similar set of drugs across all three periods. Paracetamol 500mg and co-codamol 30/500mg tablets remain the top two items before, during, and after COVID-19, together accounting for approximately 40-43% of all analgesic paid items in each window, indicating that first-line simple and combination analgesics remained the backbone of pain management despite major disruption to primary-care services. Tramadol 50mg capsules and dihydrocodeine 30mg tablets also remain consistently high-ranking, indicating a stable core formulary. Total analgesic volume changes little over time (18.83 million items before COVID, 18.54 million during, 19.08 million after), implying no major pandemic-related rise or fall in overall use. Instead, there’re modest compositional shifts: within the top 10, paracetamol 500mg and co-codamol 30/500mg gain about 1-1.3% in share between pre- and post-COVID periods, while tramadol 50mg capsules and co-codamol 8/500mg tablets gradually lose share. This pattern is consistent with a gradual shift away from stronger or higher-dose opioid combinations toward first-line paracetamol-based regimens, aligning with ongoing opioid-stewardship efforts in UK primary care (Levy, Lord, and Lobo, 2021). Paediatric paracetamol suspensions (120mg/5mL and 250mg/5mL) each contribute around 2-2.6% of items, with a dip during COVID and partial recovery afterwards, consistent with reduced childhood infections and GP consultations during lockdown, followed by a rebound in routine paediatric prescribing once contact rates recovered. Sumatriptan 50mg tablet maintains a low but gradually rising share, while morphine oral solution 10mg/5mL appears in the top 10 only after COVID with a small share, suggesting some intensification of community-managed severe pain in a minority of patients.
+Table 1 and Figure 1 together show that Scottish community analgesic prescribing is dominated by a stable group of medicines across all three periods. 
+Paracetamol 500mg and co-codamol 30/500mg tablets remain the top two items before, during, and after COVID-19, jointly accounting for around 40-43% of all analgesic paid items. This sustained prominence reflects both their established clinical roles: paracetamol as first-line analgesic, and co-codamol 30/500 mg as the usual prescribed step-up option when paracetamol alone is insufficient for moderate to severe pain or distressing cough—symptoms frequently reported in both acute COVID-19 and post-viral illness (BMJ, 2020). Their high ranking therefore likely reflects both routine pain management and COVID-related symptom burden.
+Tramadol 50mg capsules and dihydrocodeine 30mg tablets also remain consistently high-ranking across all periods, in line with their use for pain unresponsive to first-line therapy (NHS, 2022a) and, in the case of dihydrocodeine, short-term relief of dyspnoea (Beng et al., 2021). Their persistently high ranking despite small shifts in percentage share indicates ongoing reliance on opioid analgesics in primary care despite guidance on opioid stewardship (Levy, Lord, and Lobo, 2021).
+Although overall analgesics volume remains broadly stable across all periods, indicating no major pandemic-related surge in overall demand (Table 1), Figure 1 reveals modest compositional changes within this steady total. Paracetamol 500mg and co-codamol 30/500mg show slight increases in share from before to after COVID, while several other opioid formulations, notably tramadol 50mg, co-dydramol 10/500mg and co-codamol 8/500 mg show small declines. The long-term declines in tramadol and co-dydramol likely reflect national opioid-stewardship efforts, which discouraged the prolonged use of these drugs due to dependence risks and limited long-term benefit (UKMI, 2014). The reduced presence of lower-strength co-codamol partly reflects formulation availability: the 8/500mg strength is available over the counter from pharmacies and therefore appeared less in prescribing datasets, whereas only the higher strengths (15/500mg and 30/500mg) require a prescription (NHS, 2023). This explains the persistent dominance of 30/500mg co-codamol formulation in recorded prescribing. Co-codamol 30/500mg appears in both tablet and capsule formulations, exhibiting different prescribing patterns in both Table 1 and Figure 1. The tablet formulation is consistently high-volume, whereas the capsule form shows lower volumes and mild decline over time, reflecting formulation preference rather than differences in indication since there’s no difference in active medical treatment effect between the two.
+Paediatric paracetamol suspensions (120mg/5ml and 250mg/5ml contribute around 2-2.6% of prescribing, with different trajectories shown in Figure 1. The 250mg/5ml formulation for 6 plus children displays a clear trough during the COVID period followed by rebound afterwards, consistent with reduced childhood infections via contact and GP consultations during lockdown periods (NHS, 2025). In contrast, the 120mg/5ml infant formulation shows a more sustained decline (NHS, 2025). This divergence may reflect age-specific changes in contact patterns: infants and very young children already have limited social mixing, so lockdown measures produced a smaller proportional reduction in exposure-related illness, whereas school-aged children who typically experience higher seasonal infection rates, had a larger drop and subsequent rebound when contact resumed. Consequently, the rebound is more apparent in the 250mg/5 ml suspension used in older children.
+Sumatriptan 50mg tablet shows small gradual growth, reflecting sustained migraine burden (NHS, 2022b). Codeine phosphate 30mg tablet and morphine oral solution 10mg/5ml appears in the top 10 table only after COVID, suggesting a small rise in community-managed severe pain, breathlessness, and dry cough in a subset of patients (NHS, 2024; NICE, 2025).
+Taken together, Table 1 and Figure 1 point to a largely stable analgesic formulary with subtle shifts: increased reliance on paracetamol-based regimens, formulation-specific changes within opioid analgesics, symptom-related variation in paediatric and migraine treatments, and no indication of a pandemic-driven surge in total analgesics prescriptions. 
 
-Overall, Table 1 suggests that the pandemic caused a gradual shift in the mix of drugs towards paracetamol-based regimens and away from some higher-strength opioid options, rather than a large change in total analgesic burden.  
-
+## Table 1. Top 10 Most Prescribed Analgesics Before, During, and After COVID-19
 ```{r}
 ## Purpose: Identify the top-10 mostly prescribed analgesics in each period, compute their shares of all analgesic items, and display them in a formatted table
 # Calculate total paid item quantity of analgesics during each period
@@ -105,20 +107,17 @@ Top10_each_period_table <- Top10_each_period_data %>%
   cols_label(rank = "Rank", bnf_item_code = "BNF Item Code", bnf_item_description = "BNF Item Description", paid_items = "Number of Paid Items", share_pct = "Share of Analgesics(%)") %>%
   fmt_number(columns = paid_items, decimals = 0, use_seps = TRUE) %>%
   fmt_percent(columns = share_pct, decimals = 2) %>% 
-  cols_width(rank ~ px(60), bnf_item_code ~ px(140), bnf_item_description ~ px(340), paid_items ~ px(140), share_pct ~ px(140)) %>%
+  cols_width(rank ~ px(55), bnf_item_code ~ px(130), bnf_item_description ~ px(320), paid_items ~ px(130), share_pct ~ px(130)) %>%
   cols_align(align = "center", columns = c(rank, bnf_item_code, paid_items, share_pct)) %>%
   cols_align(align = "left", columns = bnf_item_description) %>%
   opt_row_striping() %>%
   tab_style(style = list(cell_fill(color = "#F5F5F5"), cell_text(weight = "bold")), locations = cells_body(columns = rank)) %>%
-  tab_options(row_group.border.top.style = "solid", row_group.border.top.width = px(2), row_group.border.top.color = "black", row_group.padding = px(6)) %>%
-  tab_options(table.font.size = px(13), heading.title.font.size = px(16), heading.subtitle.font.size = px(11), row_group.font.weight = "bold", row_group.font.size = px(12), column_labels.font.weight = "bold", column_labels.border.bottom.width = px(2), table.border.top.width = px(2), table.border.bottom.width = px(2), data_row.padding = px(4))
+  tab_options(row_group.border.top.style = "solid", row_group.border.top.width = px(1), row_group.border.top.color = "black", row_group.padding = px(4)) %>%
+  tab_options(table.font.size = px(11), heading.title.font.size = px(14), heading.subtitle.font.size = px(10), row_group.font.weight = "bold", row_group.font.size = px(11), column_labels.font.weight = "bold", column_labels.border.bottom.width = px(1), table.border.top.width = px(1), table.border.bottom.width = px(1), data_row.padding = px(2))
 Top10_each_period_table
 ```
 
 ## Figure 1. Change in Share of Union Top10 Analgesics Prescription
-To examine these compositional changes more directly, Figure 1 presents a heatmap of percentage-point changes in share for the union of Top-10 drugs (“During vs Before”, “After vs During”, “After vs Before”). Warm cells indicate gains in share and cool cells indicate losses. 
-The pattern in Figure 1 mirrors and extends Table 1. Paracetamol 500mg and co-codamol 30/500mg tablets show the largest early increases in share between the pre-COVID and COVID windows, and these gains are sustained into the post-COVID period. In contrast, high-dose combinations that fall in Table 1 (i.e. tramadol 50mg, co-dydramol 10/500mg and co-codamol 8/500mg) display consistent losses across both transitions. The heatmap also makes visible drugs with small absolute shares but marked relative shifts, such as paediatric paracetamol suspensions, which show a clear trough during COVID and rebound afterwards. 
-Taken together, Table 1 and Figure 1 indicate a gradual reweighting of prescribing toward simple and lower-dose combination analgesics and away from stronger opioid formulations, without the emergence of entirely new leading products.
 ```{r, fig.width = 8, fig.height = 5}
 ## Track changes in share for the union of top-10 drugs and visualise as a heatmap
 # Union of Top-10 analgesic codes across all periods
@@ -159,9 +158,8 @@ ggplot(union_change_plot, aes(x = contrast, y = drug_label, fill = delta)) +
 ```
 
 ## Figure 2. Monthly Presciption of All Analgesics in Scotland 
-To assess whether changes in drug share reflected redistribution within a stable total volume or genuine shifts in overall analgesic use, Figure 2 plots monthly totals for all BNF 04.07 items from before COVID to after COVID, with the COVID restriction period shaded. The series shows a pronounced peak around March 2020 (i.e. start of COVID-19), followed by a temporary reduction during the restriction period and a steady recovery from 2022 onwards, reaching slightly higher levels than in the immediate pre-pandemic years. 
-The short-lived surge at the onset of COVID-19 may reflect anticipatory stockpiling. The mid-pandemic contraction is consistent with reduced primary-care contact and fewer non-COVID illnesses. The later rebound and slight may reflect catch-up of deferred care and ongoing pain needs in patients whose treatment or procedures were delayed.
-
+To assess whether changes in drug share reflected redistribution within a stable total volume or genuine shifts in overall analgesic use, Figure 2 plots monthly totals for all BNF 04.07 items from before COVID to after COVID, with the COVID restriction period shaded. The series shows a pronounced peak around March 2020 (i.e. start of COVID-19), followed by a temporary reduction during the restriction period and a steady recovery from 2022 onwards, reaching slightly higher levels than in the pre-pandemic years. 
+The short-lived surge at the onset of COVID-19 may reflect anticipatory stockpiling. The mid-pandemic dip aligns with reduced primary-care contact and fewer non-COVID illnesses. The later rebound and slight may reflect catch-up of deferred care and ongoing pain needs in patients whose treatment or procedures were delayed. 
 ```{r, results = "hide", fig.width = 8, fig.height = 4.5}
 ## Purpose: Show overall monthly volume of all analgesics across the study period
 # Monthly Analgesics Data
@@ -212,9 +210,12 @@ ggplot(Analgesics_monthly_totals, aes(x = month_date, y = total_paid_items)) +
 ```
 
 ## Figure 3. Monthly Prescription of Union Top10 Analgesics
-To link these aggregate patterns to individual drugs, Figure 3 plots monthly counts for the union of Top-10 analgesics, each with its own LOESS trend (black curve) summarising the underlying trend by averaging over month-to-month noise, and shaded COVID period. 
-Paracetamol 500mg and co-codamol 30/500mg tablets show clear spikes at the start of COVID and then settle onto higher post-pandemic baselines, matching their increased post-COVID shares in Figure 1. Tramadol 50mg capsules, co-dydramol 10/500 mg and co-codamol 8/500 mg tablets display steady downward trajectories with only minor perturbation during COVID, consistent with their declining shares on the heatmap and the small falls in Table 1. 
-Paediatric paracetamol suspensions (120mg/5mL and 250mg/5mL) exhibit pronounced month-to-month variability but share a visible trough within the COVID band followed by recovery or overshoot, supporting the interpretation of reduced paediatric consultations and infections during restrictions and rebound afterwards. Codeine 30mg, dihydrocodeine 30mg, and sumatriptan 50mg tablets and morphine oral solution 10mg/5mL all show gradual upward trends, with morphine mainly rising in the later, post-COVID phase. Together with Figure 2, these facets suggest a brief disturbance in overall analgesic volume during COVID, superimposed on longer-term shifts away from some higher-risk opioid combinations and towards paracetamol-based and selected alternative agents.
+Building on the aggregate pattern shown in Figure 2, Figure 3 examines monthly trajectories for individual top-10 analgesics to identify which drugs contributed to the stable total volume and which exhibited divergent trends. 
+Paracetamol 500mg tablet, co-codamol 30/500mg and 15/500mg tablet show pronounced spikes at the start of COVID followed by higher post-pandemic baselines, consistent with their rising shares in Figure 1. 
+Tramadol 50mg capsule co-codamol 30/500mg capsule, co-dydramol 10/500mg tablet, and co-codamol 8/500mg tablet display steady downward trajectories, consistent with the patterns shown in Table 1 and Figure 1. 
+Paediatric paracetamol suspensions show month-to-month variability but share a trough during the COVID restriction period and subsequent recovery strongest for the 250 mg/5ml formulation used in older children.
+Codeine phosphate 30mg tablet, dihydrocodeine 30mg tablet, sumatriptan 50mg tablet and morphine oral solution 10mg/5ml all show gradual upward trends, consistent with patterns shown in Table 1 and Figure 1. 
+Taken together, these drug-specific trajectories show that the modest pandemic-related disruption quickly normalised, and longer-term shifts are driven not by changes in total demand but by gradual redistribution away from certain opioid combinations toward paracetamol-based and alternative agents.
 ```{r, fig.width = 9, fig.height = 9}
 ## Purpose: Examine drug-specific trajectories for the union of top-10 analgesics
 # Label Top10 analgesic codes across all periods
@@ -242,22 +243,40 @@ ggplot(top10_monthly_code, aes(x = month_date, y = paid_items)) +
   theme_minimal(base_size = 12) +
   theme(panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(), strip.text = element_text(face = "bold", size = 10, margin = margin(b=2)), strip.background = element_rect(fill = NA, colour = NA), panel.spacing = unit(0.9, "lines"), axis.text.x = element_text(size = 8, angle = 45, hjust = 1), plot.title.position = "plot", plot.title = element_text(face = "bold", size = 15, hjust = 0.5), plot.subtitle = element_text(size = 10, margin = margin(b = 6), hjust = 0.5))
 ```
-
 # Conclusion
-This analysis suggests that COVID-era changes in Scottish community analgesic prescribing were modest in volume but meaningful in composition. Total paid items for analgesics were very similar across the three 26-month windows, with only a brief spike around March 2020, a mid-pandemic dip, and a modest recovery above pre-COVID levels. In contrast, the mix of drugs changed: prescribing remained concentrated in a small set of agents, but within that group paracetamol 500mg and co-codamol 30/500mg became slightly more prominent, while tramadol 50mg and other higher-dose opioid combinations declined. Paediatric paracetamol suspensions showed a trough during restrictions and subsequent rebound, consistent with temporary reductions in childhood infections and primary-care contact. Together, the time-series and share analyses indicate that early-pandemic disturbances were short-lived, whereas the gradual move away from some opioid formulations and toward paracetamol-based regimens represents a longer-term shift that continued beyond the main restriction period.
-These findings are consistent with ongoing opioid-stewardship efforts in Scottish primary care, with no evidence of a sustained COVID-driven surge in strong-opioid use. However, several limitations qualify the interpretation. 
-Paid items capture dispensing events but not dose, treatment duration, indication, or over-the-counter and hospital use. The analysis focuses on aggregate data and the union of the top-10 drugs, so it cannot reveal patient-level differences by age, deprivation or diagnosis, nor trends in less commonly prescribed agents. Collapsing a complex pandemic into three broad periods also obscures shorter policy phases and regional variation, and the descriptive design cannot establish causality.
-Future work could extend the time horizon to see whether post-COVID patterns persist or attenuate, and link community prescribing to richer datasets such as demographic information, chronic pain registers, procedure and discharge data, or infection surveillance to examine how trends differ across clinical and social groups. Using dose-based metrics (e.g. defined daily doses or oral morphine equivalents) and applying interrupted time-series methods around key policy and pandemic milestones would allow more formal assessment of changes in true analgesic exposure and stewardship impact. The workflow used here could also be applied to other drug classes to monitor how future system shocks or policy interventions shape community prescribing.
+Overall, Scottish community analgesic prescribing remained highly stable across the pre-, during-, and post-COVID periods, with no pandemic-driven surge in total volume. The main shifts were compositional: paracetamol 500mg and co-codamol 30/500mg tablets remained dominant with slight post-COVID increases; Several opioid formulations declined, and selected agents (e.g., sumatriptan, dihydrocodeine, codeine phosphate, morphine oral solution) showed modest growth. Paediatric formulations displayed age-specific disruption and recovery during COVID. These findings indicate a largely steady formulary with subtle redistribution among drug classes rather than major changes in overall analgesic demand caused by COVID.
+However, interpretation is limited several factors. Paid-item counts measure dispensing events only and do not capture dose, treatment duration, indication, or over-the-counter and hospital supply. The analysis uses aggregate data and focuses on the union of the top-10 drugs, so it cannot identify patient-level variation by age, deprivation, or diagnosis, nor trends in less commonly prescribed agents. Broad period definitions may also obscure short-term policy phases or regional differences. The descriptive design couldn’t establish causality. 
+Future work should incorporate dose-based metrics and linkage to demographic or clinical datasets to explore subgroup differences and policy effects. Extending the time horizon and applying formal time-series methods would help assess the persistence and drivers of these trends, and the workflow could be adapted to monitor other therapeutic areas. 
 
 # References
-Levy, N., Lord, L.J. and Lobo, D.N. (2021). ‘UK recommendations on opioid stewardship’, BMJ, 372, pp.m4901. Available at:https://doi.org/10.1136/bmj.m4901.
+Beng, T.S., Kim, C.L.C., Shee, C.C., Ching, D.N.L., Liang, T.J., Kumar, M.K.N., Guan, N.C., Khuen, L.P., Loong, L.C., Chin, L.E. and Zainuddin, S.I., (2022) ‘COVID-19, Suffering and Palliative Care: A Review’, American Journal of Hospice and Palliative Medicine®, 39(8), pp. 986-995. Available at: https://doi.org/10.1177/10499091211046233.
 
-NHS (2025) Long COVID. Available at:https://www.nhs.uk/conditions/long-covid/#:~:text=a%20high%20temperature,anxiety%20and%20depression (Accessed: 26 November 2025).
+Evcik, D. (2023) ‘Musculoskeletal involvement: COVID-19 and post COVID 19’, Turkish Journal of Physical Medicine and Rehabilitation, 1(1), pp. 1–7. Available at: https://doi.org/10.5606/tftrd.2023.12521.
 
-Open Prescribing (2025) All BNF sections. Available at:https://openprescribing.net/bnf/ (Accessed: 26 November 2025).
+Levy, N., Lord, L.J. and Lobo, D.N. (2021). ‘UK recommendations on opioid stewardship’, BMJ, 372, pp.m4901. Available at: https://doi.org/10.1136/bmj.m4901.
+Open Prescribing (2025) All BNF sections. Available at: https://openprescribing.net/bnf/ (Accessed: 26 November 2025).
 
-Public Health Scotland (2025) Prescriptions in the Community. Available at:https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community (Accessed: 26 November 2025). 
+‘Managing COVID-19 symptoms (including at the end of life) in the community: summary of NICE guidelines’ (2020) BMJ, p. m1461. Available at: https://doi.org/10.1136/bmj.m1461.
 
-Scottish COVID-19 Inquiry (2025) COVID-19 Pandemic in Scotland - a timeline of key dates. Available at:https://www.covid19inquiry.scot/covid-19-pandemic-scotland-timeline-key-dates (Accessed: 26 November 2025). 
+Nalbandian, A., Sehgal, K., Gupta, A., Madhavan, M.V., McGroder, C., Stevens, J.S., Cook, J.R., Nordvig, A.S., Shalev, D., Sehrawat, T.S. and Ahluwalia, N. (2021) ‘Post-acute COVID-19 syndrome’, Nature Medicine, 27(4), pp. 1–15. Available at: https://doi.org/10.1038/s41591-021-01283-z.
+
+NHS (2022a) About tramadol. Available at: https://www.nhs.uk/medicines/tramadol/about-tramadol/#:~:text=Tramadol%20is%20a%20strong%20painkiller,usually%20only%20done%20in%20hospital. (Accessed: 26 November 2025). 
+
+NHS (2022b) About sumatriptan. Available at: https://www.nhs.uk/medicines/sumatriptan/about-sumatriptan/ (Accessed: 26 November 2025).
+
+NHS (2024) A patient’s guide to Oramorph (morphine sulphate oral solution10mg/5ml) for use in breathlessness. Available at: https://www.buckshealthcare.nhs.uk/pifs/a-patients-guide-to-oramorph-morphine-sulphate-oral-solution-10mg-5ml-for-use-in-breathlessness/#:~:text=What%20is%20Oramorph?,with%20continued%20use%20of%20Oramorph. (Accessed: 26 November 2025).
+
+NHS (2023) How and when to take co-codamol for adults. Available at: https://www.nhs.uk/medicines/co-codamol-for-adults/how-and-when-to-take-co-codamol-for-adults/ (Accessed: 26 November 2025).
+
+NHS (2025) Paracetamol for children (Calpol). Available at: https://www.nhs.uk/medicines/paracetamol-for-children/ (Accessed: 26 November 2025).
+
+NICE (2025) Codeine phosphate. Available at: https://bnf.nice.org.uk/drugs/codeine-phosphate/#:~:text=Oral%20tablet,given%20for%20the%20shortest%20duration. (Accessed: 26 November 2025).
+
+Public Health Scotland (2025) Prescriptions in the Community. Available at: https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community (Accessed: 26 November 2025).
+
+Scottish COVID-19 Inquiry (2025) COVID-19 Pandemic in Scotland - a timeline of key dates. Available at: https://www.covid19inquiry.scot/covid-19-pandemic-scotland-timeline-key-dates (Accessed: 26 November 2025). 
+
+UKMI (2014) Tramadol: new legal classification. Available at: https://www.derbyshiremedicinesmanagement.nhs.uk/assets/Controlled_Drugs/Tramadol_new_legal_classification_June_2014.pdf (Accessed: 26 November 2025). 
+
 
 
