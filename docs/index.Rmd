@@ -111,7 +111,7 @@ Top10_each_period_table <- Top10_each_period_data %>%
   cols_label(rank = "Rank", bnf_item_code = "BNF Item Code", bnf_item_description = "BNF Item Description", paid_items = "Number of Paid Items", share_pct = "Share of Analgesics(%)") %>%
   fmt_number(columns = paid_items, decimals = 0, use_seps = TRUE) %>%
   fmt_percent(columns = share_pct, decimals = 1) %>% 
-  cols_width(rank ~ px(40), bnf_item_code ~ px(90), bnf_item_description ~ px(260), paid_items ~ px(110), share_pct ~ px(90)) %>%
+  cols_width(rank ~ px(40), bnf_item_code ~ px(120), bnf_item_description ~ px(230), paid_items ~ px(110), share_pct ~ px(90)) %>%
   cols_align(align = "center", columns = c(rank, bnf_item_code, paid_items, share_pct)) %>%
   cols_align(align = "left", columns = bnf_item_description) %>%
   opt_row_striping() %>%
@@ -121,7 +121,7 @@ Top10_each_period_table <- Top10_each_period_data %>%
 Top10_each_period_table
 ```
 
-## Figure 1. Change in Share of Union Top10 Analgesics Prescription
+## Figure 1. Changes in Share of Union Top10 Analgesics Prescription
 ```{r, fig.width = 9, fig.height = 4.5}
 ## Track changes in share for the union of top-10 drugs and visualise as a heatmap
 # Union of Top-10 analgesic codes across all periods
@@ -156,10 +156,10 @@ ggplot(union_change_plot, aes(x = contrast, y = drug_label, fill = delta)) +
   geom_text(aes(label = percent(delta, accuracy = 0.1)), size = 3.2, fontface = "bold") +
   scale_fill_gradient2(low = "#2166ac", mid = "white", high = "#b2182b", limits = c(-lim, lim), breaks = pretty_breaks(5), labels = percent_format(accuracy = 0.1), name = "Δ share")+
   scale_x_discrete(position = "top") +
-  labs(title = "Figure 1. Change in Share of Union Top10 Analgesics Prescription", subtitle = "Union of Top-10 drugs across periods (values are percentage_point changes)", x = NULL, y = NULL, caption = "Warm colours = increased share; Cool colours = decreased share.") + theme_minimal(base_size = 12) + theme(panel.grid = element_blank(), axis.text.x = element_text(face = "bold", size = 10), axis.text.y = element_text(size = 9), plot.title = element_text(face = "bold", size = 15, hjust = 0.5), plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b=8)), legend.title = element_text(face = "bold"), legend.key.height = unit(1.1, "cm"), plot.margin = margin(10, 12, 10, 10))
+  labs(title = "Figure 1. Changes in Share of Union Top10 Analgesics Prescription", subtitle = "Union of Top-10 drugs across periods (values are percentage_point changes)", x = NULL, y = NULL, caption = "Warm colours = increased share; Cool colours = decreased share.") + theme_minimal(base_size = 12) + theme(panel.grid = element_blank(), axis.text.x = element_text(face = "bold", size = 10), axis.text.y = element_text(size = 9), plot.title = element_text(face = "bold", size = 15, hjust = 0.5), plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b=8)), legend.title = element_text(face = "bold"), legend.key.height = unit(1.1, "cm"), plot.margin = margin(10, 12, 10, 10))
 ```
 
-## Figure 2. Monthly Presciption of All Analgesics in Scotland 
+## Figure 2. Monthly Presciptions of All Analgesics in Scotland 
 To assess whether changes in drug share reflected redistribution within a stable total volume or shifts in overall analgesic use, Figure 2 presents monthly totals for all BNF 04.07 items from before COVID to after COVID, with the COVID restriction period shaded. 
 
 The series shows a pronounced peak around March 2020 (i.e. start of COVID-19), followed by a temporary reduction during the restriction period and a steady recovery from 2022 onwards, reaching slightly higher levels than in the pre-pandemic years. The short-lived surge at the onset of COVID-19 may reflect anticipatory stockpiling. The mid-pandemic dip aligns with reduced primary-care contact and fewer non-COVID illnesses. The subsequent rebound and mild overshoot may reflect catch-up of deferred care and ongoing pain needs in patients whose treatment or procedures were delayed. 
@@ -190,19 +190,19 @@ Analgesics_monthly_totals <- AllMonthly %>%
 covid_start <- ym("2020-03")
 covid_end <- ym("2022-05")
 covid_band <- tibble(xmin = covid_start, xmax = covid_end, ymin = -Inf, ymax = Inf)
-# Plot Monthly Presciption of All Analgesics in Scotland
+# Plot Monthly Presciptions of All Analgesics in Scotland
 ggplot(Analgesics_monthly_totals, aes(x = month_date, y = total_paid_items)) +
   geom_rect(data = covid_band, aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax), inherit.aes = FALSE, fill = "grey85", alpha = 0.5) +
   geom_line(linewidth = 0.8, colour = "#2C6BAA") +
   geom_smooth(method = "loess", se = FALSE, colour = "black") +
   scale_x_date(date_breaks="3 months", date_labels="%Y-%m") +
   scale_y_continuous(labels=comma) +
-  labs(title = "Figure 2. Monthly Presciption of All Analgesics in Scotland (BNF 04.07)", subtitle = "Grey band = COVID restriction period; Black curve = LOESS trend", x = "Year-Month", y = "Total Paid Items") +
+  labs(title = "Figure 2. Monthly Presciptions of All Analgesics in Scotland (BNF 04.07)", subtitle = "Grey band = COVID restriction period; Black curve = LOESS trend", x = "Year-Month", y = "Total Paid Items") +
   theme_minimal(base_size = 14) +
   theme(panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(), axis.text.x = element_text(angle = 45, hjust = 1), plot.title.position = "plot", plot.title = element_text(face = "bold", size = 15, hjust = 0.5), plot.subtitle = element_text(size = 10, margin = margin(b = 6), hjust = 0.5))
 ```
 
-## Figure 3. Monthly Prescription of Union Top10 Analgesics
+## Figure 3. Monthly Prescriptions of Union Top10 Analgesics
 Building on the aggregate pattern in Figure 2, Figure 3 examines monthly trajectories for individual top-10 analgesics to identify which drugs contributed to the stable total volume and which diverged.
 
 Paracetamol 500mg tablet, co-codamol 30/500mg tablet, and 15/500mg tablet show pronounced spikes at the start of COVID-19 followed by higher post-pandemic baselines, consistent with their rising shares in Figure 1. Tramadol 50mg capsule, co-codamol 30/500mg capsule, co-dydramol 10/500mg tablet, and co-codamol 8/500mg tablet display steady long-term declines, aligning with the downward patterns in Table 1 and Figure 1. Paediatric paracetamol suspensions exhibit month-to-month variabilities but a shared trough during COVID restriction period, with subsequent recovery more evident in the 250 mg/5ml formulation used in older children. Codeine phosphate 30mg tablet, dihydrocodeine 30mg tablet, sumatriptan 50mg tablet and morphine oral solution 10mg/5ml all show gradual upward trends, again reflecting patterns seen in Table 1 and Figure 1. 
@@ -223,7 +223,7 @@ top10_monthly_code <- AllMonthly %>%
   group_by(month_date, bnf_item_code) %>%
   summarise(paid_items = sum(number_of_paid_items, na.rm = TRUE), .groups = "drop") %>%
   left_join(code_labels, by = "bnf_item_code")
-# Plot Monthly Prescription of Union Top10 Analgesics
+# Plot Monthly Prescriptions of Union Top10 Analgesics
 ggplot(top10_monthly_code, aes(x = month_date, y = paid_items)) +
   geom_rect(data = covid_band, aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax), inherit.aes = FALSE, fill = "grey85", alpha = 0.5) +
   geom_line(linewidth = 0.7, colour = "#2C6BAA") +
@@ -231,7 +231,7 @@ ggplot(top10_monthly_code, aes(x = month_date, y = paid_items)) +
   facet_wrap(~ label, scales = "free_y", ncol = 2, labeller = label_wrap_gen(width = 22)) +
   scale_x_date(date_breaks = "6 months", date_labels = "%Y-%m") +
   scale_y_continuous(labels = comma, breaks = scales::pretty_breaks(4)) +
-  labs(title = "Figure 3. Monthly Prescription for Union of Top-10 Analgesics", subtitle = "Grey band = COVID restriction period; Black curve = within-drug LOESS trend", x = "Year-Month", y = "Number of paid items")+
+  labs(title = "Figure 3. Monthly Prescriptions for Union of Top-10 Analgesics", subtitle = "Grey band = COVID restriction period; Black curve = within-drug LOESS trend", x = "Year-Month", y = "Number of paid items")+
   theme_minimal(base_size = 12) +
   theme(panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(), strip.text = element_text(face = "bold", size = 10, margin = margin(b=2)), strip.background = element_rect(fill = NA, colour = NA), panel.spacing = unit(0.9, "lines"), axis.text.x = element_text(size = 8, angle = 45, hjust = 1), plot.title.position = "plot", plot.title = element_text(face = "bold", size = 15, hjust = 0.5), plot.subtitle = element_text(size = 10, margin = margin(b = 6), hjust = 0.5))
 ```
