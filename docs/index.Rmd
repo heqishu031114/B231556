@@ -12,7 +12,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.align = "center")
 ```
 # Introduction
-The COVID-19 pandemic provides a natural experiment for assessing how a major health-system disruption affected community analgesic prescribing in Scotland. Scotland’s first confirmed COVID-19 case on 1 March 2020 was followed by a national lockdown on 24 March 2020, with rapid expansion of remote consultations and postponement of elective care, and legal restrictions were largely removed by 18 April 2022. (Scottish COVID-19 Inquiry, 2025). 
+The COVID-19 pandemic provides a natural experiment for assessing how a major health-system disruption affected community analgesic prescribing in Scotland. Scotland’s first confirmed COVID-19 case on 1 March 2020 was followed by a national lockdown on 24 March 2020, with rapid expansion of remote consultations and postponement of elective care, and legal restrictions were largely removed by 18 April 2022 (Scottish COVID-19 Inquiry, 2025). 
 COVID-19 also changed the population’s symptom burden. Headache, dyspnoea, myalgia, musculoskeletal pain and persistent cough were common features of both acute infection and post-viral illness (Evcik, 2023; Nalbandian et al., 2021). As a result, analgesics, from first-line agents such as paracetamol to stronger options such as co-codamol were frequently used to manage moderate to severe symptoms. These clinical patterns provide context for interpreting prescribing changes across the pandemic. Using Public Health Scotland “Prescriptions in the Community” data, this analysis examines how analgesic prescribing evolved across three non-overlapping 26-month windows: 
 
 -	Before COVID: January 2018 – February 2020  
@@ -29,7 +29,7 @@ The primary outcome is the number of paid items for analgesics (BNF section 04.0
 
 3. Were any observed changes brief responses around the onset of the pandemic, or did they develop into longer-term shifts in practice?
 
-To answer these questions, the report summarises the top-10 analgesics by volume in each period, analyses changes in their percentage share using a heatmap, and evaluates monthly time-series for both total analgesic items and the union of top-10 analgesics.
+To answer these questions, the report summarises the top-10 most prescribed analgesics by volume in each period, analyses changes in their percentage share using a heatmap, and evaluates monthly time-series for both total analgesic items and the union of top-10 analgesics.
 
 # Data Loading
 ```{r}
